@@ -1,0 +1,27 @@
+rpcDaemonAddr: "127.0.0.1"
+rpcDaemonPort: 11211
+rpcWalletAddr: "127.0.0.1"
+rpcWalletPort: 11221
+rpcWalletAddrRefill: "127.0.0.1"
+rpcWalletPortRefill: 11217
+rpcWalletAddrAudit: "127.0.0.1"
+rpcWalletPortAudit: 11219
+skipRefill: true
+skipAudit: true
+
+keyDirectory: "/etc/mmbot/keys"
+signKey: "tradebot.example.com"
+
+dbConnectionUrl: "jdbc:mariadb://localhost:3306/marketmaker?serverTimezone=UTC"
+dbUser: "marketmaker"
+dbPassword: "password"
+
+tokenAssetId: "0e81c0354c8eace04b4b5988a9691253d0887b2e4d92a4fac1fb84761dbc69a3"
+
+minUtxo: 30
+maxUtxo: 60
+
+yubicoClientId: 1111111
+
+coinexApiKey: "replace_this"
+coinexSecretKey: "replace_this"

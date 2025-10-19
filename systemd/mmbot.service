@@ -1,0 +1,15 @@
+[Unit]
+Description=MMbot service
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/mmbot/
+ExecStart=/usr/bin/java -jar /opt/mmbot/TradeBot-1.0.jar
+User=mmbot
+Group=mmbot
+TasksMax=100000
+LimitNOFILE=100000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

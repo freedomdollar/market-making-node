@@ -1,0 +1,15 @@
+[Unit]
+Description=Zano Daemon
+After=network.target
+
+[Service]
+User=zano
+ExecStart=/opt/zano-bin/zanod --data-dir=/opt/zano-blockchain --log-dir=/opt/zano-logs --rpc-bind-ip 127.0.0.1 --rpc-bind-port 11211 --enable-offers-service --no-console
+TimeoutSec=30
+Restart=on-failure
+RestartSec=30
+StartLimitInterval=350
+StartLimitBurst=10
+
+[Install]
+WantedBy=multi-user.target

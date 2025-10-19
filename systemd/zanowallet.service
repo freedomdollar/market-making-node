@@ -1,0 +1,15 @@
+[Unit]
+Description=Zano Main Wallet
+After=network.target
+
+[Service]
+User=zano
+ExecStart=/opt/zano-bin/simplewallet --do-pos-mining --wallet-file /etc/mmbot/wallets/mywallet.wallet --password notsafepassword --rpc-bind-ip 127.0.0.1 --rpc-bind-port 11216 --daemon-address 127.0.0.1:11211
+TimeoutSec=30
+Restart=on-failure
+RestartSec=30
+StartLimitInterval=350
+StartLimitBurst=10
+
+[Install]
+WantedBy=multi-user.target
