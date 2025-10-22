@@ -37,7 +37,7 @@ public class SettingsService implements ApplicationService {
                     e.printStackTrace();
                 }
             }
-        }, 10000, 10000, TimeUnit.MILLISECONDS);
+        }, 2000, 2000, TimeUnit.MILLISECONDS);
     }
 
     @Override

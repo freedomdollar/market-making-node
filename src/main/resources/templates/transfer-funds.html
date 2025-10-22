@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transfer funds • fUSD Market Maker</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Theme CSS -->
+    <style>
+        :root {
+            --main-bg-color: #0c0c3a; --font-main-color: #fff; --font-dimmed-color: #8d95ae; --delimiter-color: hsla(0, 0%, 100%, .1);
+            --window-bg-color: #0f2055; --dropdown-bg-color: #11316b; --dropdown-bg-hover: #1d3b72; --profile-widget-avatar: #11316b;
+            --window-border-color: hsla(0, 0%, 100%, .3); --bordered-input-bg: hsla(0, 0%, 100%, .1); --row-header-bg: #154d91;
+            --button-bordered-hover: hsla(0, 0%, 100%, .1); --alert-bg: #233467; --switch-bg-color: #0f2055; --switch-bg-hover: #273666;
+            --dimmed-btn-bg: hsla(0, 0%, 100%, .1); --dimmed-btn-hover: hsla(0, 0%, 100%, .3); --font-faded-color: hsla(0, 0%, 100%, .5);
+            --slider-bg-color: #1d3b72; --blur-color: hsla(0, 0%, 100%, .05); --icon-bg-color: #0f1f54; --swap-btn-bg: rgba(31, 143, 235, .1);
+            --advices-bg-color: hsla(0, 0%, 100%, .1); --messenger-top-bg: #0f2055; --messenger-bottom-bg: #273666; --messenger-bg: #0f2055;
+            --messenger-border: hsla(0, 0%, 100%, .1); --message-bg: hsla(0, 0%, 100%, .1); --custom-message-bg: transparent;
+            --trade-table-tooltip: #1d3b72; --dex-offer-notification: #0f2055; --dex-panel-bg: #0f2055; --dex-panel-tooltip: #273666;
+            --dex-buy-sell-border: #ffffff1a; --dex-input-currency: #39497c; --footer-selected-link: #ffffffcc; --table-th-color: #ffffffb2;
+            --table-thead-bg: #24244e; --table-tbody-bg: #101040; --admin-table-border-color: #596f98;
+            --buy-color: #16d1d6; --sell-color: #ff6767; --link-color: #1f8feb; --link-hover-color: #4ca5ef;
+            --bs-primary-rgb: 31, 143, 235; --bs-primary: var(--link-color);
+        }
+        *, *::before, *::after { padding: 0; margin: 0; border: none; outline: none; box-sizing: border-box; transition: all .3s; background-clip: border-box; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+        body { background-color: var(--main-bg-color); color: #FFF; font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.6; padding-top: 0 !important; }
+        .container, .container-fluid { max-width: 1800px; padding: 40px 20px 80px; }
+        @media screen and (min-width: 1200px) { .container, .container-fluid { padding: 40px 60px 80px; } }
+        p { color: var(--font-main-color); margin-bottom: 0.5rem; } a { color: var(--link-color); text-decoration: none; } a:hover { color: var(--link-hover-color); text-decoration: underline; }
+        h1, h2, h3, h4, h5, h6 { color: var(--font-main-color); font-weight: 600; margin-top: 0; margin-bottom: 1rem; }
+        h1 { font-size: 2.5rem; } h2 { font-size: 2rem; } h3 { font-size: 1.75rem; } h4 { font-size: 1.5rem; } h5 { font-size: 1.25rem; } h6 { font-size: 1rem; }
+        .text-muted { color: var(--font-dimmed-color) !important; }
+        .card { color: #FFF; background-color: var(--window-bg-color); border: 1px solid var(--window-border-color); border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); position: relative; }
+        .card-header { background-color: transparent; border-bottom: 1px solid var(--delimiter-color); color: var(--font-main-color); font-weight: 600; font-size: 1.1em; padding: 1rem 1.5rem; border-top-left-radius: 15px; border-top-right-radius: 15px; }
+        .card-body { padding: 1.5rem; } .card-body.p-0 { padding: 0 !important; } .card-body.p-0 .table { margin-bottom: 0; }
+        .card-footer { background-color: transparent; border-top: 1px solid var(--delimiter-color); padding: 1rem 1.5rem; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; }
+        .badge { padding: 0.3em 0.6em; font-size: 0.8em; font-weight: 700; border-radius: 5px; --bs-badge-bg: var(--dimmed-btn-bg); color: var(--font-main-color); border: 1px solid transparent; }
+        .badge.bg-success { color: var(--buy-color); border-color: var(--buy-color); background-color: transparent !important; }
+        .badge.bg-danger  { color: var(--sell-color); border-color: var(--sell-color); background-color: transparent !important; }
+        .badge.bg-primary { color: var(--link-color); border-color: var(--link-color); background-color: transparent !important; }
+        .badge.bg-secondary { color: var(--font-dimmed-color); border-color: var(--font-dimmed-color); background-color: transparent !important; }
+        .text-success { color: var(--buy-color) !important; } .text-danger { color: var(--sell-color) !important; }
+
+        /* --- Layout additions: top bar + left sidebar --- */
+        :root { --sidebar-width: 260px; --sidebar-collapsed-width: 76px; --topbar-height: 64px; }
+        body { padding-top: var(--topbar-height) !important; }
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: var(--topbar-height);
+            display: flex; align-items: center;
+            background: var(--messenger-top-bg);
+            border-bottom: 1px solid var(--window-border-color);
+            z-index: 1030;
+            padding: 0 .75rem;
+        }
+        .topbar .navbar-brand { color: #fff; font-weight: 700; display: flex; align-items: center; gap: .5rem; text-decoration: none; }
+        .topbar .form-control { background: var(--bordered-input-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color); }
+        .topbar .btn-outline-secondary { color: var(--font-main-color); border-color: var(--window-border-color); }
+        .topbar .btn-outline-secondary:hover { background: var(--dimmed-btn-bg); }
+        .sidebar {
+            position: fixed; top: var(--topbar-height); left: 0; bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--window-bg-color);
+            border-right: 1px solid var(--window-border-color);
+            padding: .75rem .5rem;
+            overflow-y: auto; z-index: 1020;
+            transform: translateX(0);
+            transition: transform .25s ease, width .25s ease;
+        }
+        .sidebar .nav-section-title {
+            font-size: .75rem; text-transform: uppercase; letter-spacing: .04em;
+            color: var(--font-dimmed-color);
+            padding: .5rem .75rem; margin-top: .25rem;
+        }
+        .sidebar .nav-link { display: flex; align-items: center; gap: .75rem; color: var(--font-main-color);
+            padding: .6rem .75rem; border-radius: .5rem; font-weight: 600; }
+        .sidebar .nav-link:hover { background: var(--dropdown-bg-hover); text-decoration: none; }
+        .sidebar .nav-link.active { background: var(--dimmed-btn-bg); border: 1px solid var(--window-border-color); }
+        .sidebar .nav-link .bi { font-size: 1.1rem; }
+        .content { margin-left: var(--sidebar-width); }
+        @media (max-width: 991.98px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } .content { margin-left: 0; } }
+        body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed-width); }
+        body.sidebar-collapsed .content { margin-left: var(--sidebar-collapsed-width); }
+        body.sidebar-collapsed .sidebar .label { display: none; }
+        body.sidebar-collapsed .sidebar .nav-link { justify-content: center; }
+        #sidebar-backdrop { position: fixed; inset: var(--topbar-height) 0 0 0; background: rgba(0,0,0,.5); z-index: 1015; display: none; }
+        #sidebar-backdrop.show { display: block; }
+
+        .input-group-text {border: 1px solid hsla(0, 0%, 100%, .3); color: #ffffff; background-color: #273766;}
+
+
+
+        /* Inputs */
+        .form-control, .form-select {
+            background-color: var(--bordered-input-bg); color: var(--font-main-color);
+            border: 1px solid var(--window-border-color);
+        }
+        .form-control:disabled { opacity: .85; }
+        .input-help { font-size: .9rem; color: var(--font-dimmed-color); }
+
+        /* Card overlay for disabled states */
+        .card .card-overlay {
+            z-index: 1000; font-size: 32px; color: #FFF !important;
+            text-shadow: 3px 3px 5px #000; position: absolute; inset: 0; display: none;
+            align-items: center; justify-content: center; background: rgba(0,0,0,.15); border-radius: 15px; font-weight: 600;
+            text-align: center; padding: .75rem;
+        }
+        .card.is-disabled .card-overlay { display: flex; }
+        .cursor-pointer { cursor: pointer; }
+        .form-select { background-color: #0f2055; }
+        input.form-control {color: #FFF;
+            background-color: #273766;}
+        input.form-control::placeholder {color: #888;}
+
+        #amount-input {color: #FFF; background-color: #273766; }
+        #address-input {color: #FFF; background-color: #273766; }
+        #base-address {color: #AAA; background-color: #273766;}
+        #payment-id {color: #AAA; background-color: #273766;}
+        #comment-input {color: #FFF; background-color: #273766; }
+        #comment-input::placeholder {color: #888; }
+    
+        /* Make editable payment ID look active */
+        #payment-id:not([readonly]) { color: #FFF; }
+    </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<nav class="topbar">
+    <button class="btn btn-outline-secondary me-2" id="btn-toggle-sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="bi bi-list"></i>
+    </button>
+    <a class="navbar-brand me-3" href="/">
+        <i class="bi bi-hexagon"></i> fUSD Market Maker
+    </a>
+
+    <form class="d-none d-md-flex ms-auto me-3" role="search" autocomplete="off">
+        <input class="form-control form-control-sm" type="search" placeholder="Search…" aria-label="Search" style="display: none;" />
+    </form>
+
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle"></i><span class="d-none d-md-inline">Admin</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+            <li><h6 class="dropdown-header">Account</h6></li>
+            <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Sidebar + mobile backdrop -->
+<div id="sidebar-backdrop" aria-hidden="true"></div>
+<aside class="sidebar" id="sidebar" aria-label="Sidebar">
+    <div class="nav-section-title">Main</div>
+    <nav class="nav flex-column">
+        <a class="nav-link" href="/"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a>
+        <a class="nav-link" href="/settings"><i class="bi bi-gear"></i><span class="label">Settings</span></a>
+        <a class="nav-link" href="/transactions"><i class="bi bi-receipt"></i><span class="label">Transactions</span></a>
+        <!-- New menu item -->
+        <a class="nav-link active" href="/transfer-funds"><i class="bi bi-arrow-left-right"></i><span class="label">Transfer funds</span></a>
+    </nav>
+</aside>
+
+<!-- Main content -->
+<main class="content">
+    <div class="container-fluid">
+        <h2 class="mb-3"><i class="bi bi-arrow-left-right me-2"></i>Transfer funds</h2>
+
+        <!-- global alerts -->
+        <div id="send-alert" class="alert d-none" role="alert"
+             style="background-color: var(--alert-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color);">
+        </div>
+
+        <!-- Asset + amount -->
+        <div class="card" id="card-asset">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Select asset & amount</span>
+                <small class="text-muted" id="assets-status">Loading assets…</small>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <label for="asset-select" class="form-label">Asset</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-coin"></i></span>
+                            <select id="asset-select" class="form-select" aria-label="Select asset"></select>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small id="asset-balance" class="input-help">Balance: —</small>
+                            <small id="available-help" class="input-help">Available to send: —</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <label for="amount-input" class="form-label">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-cash-coin"></i></span>
+                            <input id="amount-input" type="number" min="0" step="any" class="form-control" placeholder="0.0" aria-describedby="amount-help" />
+                            <button class="btn btn-outline-secondary" type="button" id="btn-max">Max</button>
+                        </div>
+                        <div class="mt-2 d-flex justify-content-between">
+                            <small id="amount-help" class="input-help">Enter the amount to transfer.</small>
+                            <small id="fee-help" class="input-help">Network fee: <span class="badge bg-secondary">0.01 ZANO</span></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small class="text-muted">You must have at least <strong>0.01 ZANO</strong> in your wallet to send any transfer.</small>
+                <small class="text-muted">ZANO balance: <span id="zano-balance">—</span></small>
+            </div>
+            <div class="card-overlay" id="fee-overlay">Insufficient ZANO for network fee</div>
+        </div>
+
+        <!-- Recipient -->
+        <div class="card">
+            <div class="card-header">Recipient</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="address-input" class="form-label">Destination address / Alias (alias start with @)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope-arrow-down"></i></span>
+                            <input id="address-input" type="text" class="form-control" placeholder="Paste a base or integrated address…" autocomplete="off" />
+                            <button class="btn btn-outline-secondary" type="button" id="btn-check-address">
+                                <i class="bi bi-search"></i> Check
+                            </button>
+                        </div>
+                        <div class="mt-2 d-flex justify-content-between">
+                            <small id="address-help" class="input-help">Enter an address.</small>
+                            <small id="address-status" class="input-help text-muted">—</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8 d-none" id="row-base-address">
+                        <label for="base-address" class="form-label">Resolved base address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                            <input id="base-address" type="text" class="form-control" readonly />
+                            <button class="btn btn-outline-secondary" type="button" data-copy="#base-address"><i class="bi bi-clipboard"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 d-none" id="row-payment-id">
+                        <label for="payment-id" class="form-label">Payment ID / Account number</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                            <input id="payment-id" type="text" class="form-control" readonly />
+                            <button class="btn btn-outline-secondary" type="button" data-copy="#payment-id"><i class="bi bi-clipboard"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="col-12 d-none" id="row-alias">
+                        <div class="alert mb-0" style="background-color: var(--alert-bg); border: 1px solid var(--window-border-color);">
+                            <i class="bi bi-person-badge me-2"></i><strong>Alias:</strong> <span id="alias-text"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comment -->
+        <div class="card">
+            <div class="card-header">Comment (encrypted & visible to receiver)</div>
+            <div class="card-body">
+                <textarea id="comment-input" class="form-control" rows="3" maxlength="200" placeholder="Optional message to the recipient…"></textarea>
+                <div class="mt-2 d-flex justify-content-between">
+                    <small class="text-muted">Up to 200 characters.</small>
+                    <small class="text-muted">Will be encrypted on-chain for the recipient.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+            <button id="btn-send" class="btn btn-primary">
+                <span class="default"><i class="bi bi-send"></i> Send</span>
+                <span class="sending d-none"><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Sending…</span>
+            </button>
+            <button id="btn-reset" class="btn btn-outline-secondary">Reset</button>
+        </div>
+    </div>
+</main>
+
+<!-- jQuery / Bootstrap -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/js/transfer-funds.js"></script>
+</body>
+</html>

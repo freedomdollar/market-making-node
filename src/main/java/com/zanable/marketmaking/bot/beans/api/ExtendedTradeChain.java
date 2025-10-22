@@ -43,5 +43,6 @@ public class ExtendedTradeChain {
 
     private SimplifiedTrade zanoSellOrder;
     private SimplifiedTrade fusdBuyOrder;
+    private SimplifiedTrade fusdSellOrder;
     private SimplifiedTrade zanoBuyOrder;
 }

@@ -385,6 +385,137 @@ public class MexcSpotClient {
         return http.send(req, HttpResponse.BodyHandlers.ofString()).body();
     }
 
+    public String getDepositAddressesRaw(String coin, String network) throws Exception {
+        Map<String, String> q = new LinkedHashMap<>();
+        q.put("coin", coin);
+        if (network != null) q.put("network", network);
+        q.put("recvWindow", String.valueOf(defaultRecvWindowMs));
+        q.put("timestamp", String.valueOf(now()));
+        String signed = signedQuery(q, "");
+
+        HttpRequest req = baseReqBuilder("/api/v3/capital/deposit/address?" + signed)
+                .GET()
+                .build();
+        return http.send(req, HttpResponse.BodyHandlers.ofString()).body();
+    }
+
+    /** Typed convenience wrapper for GET deposit address(es). */
+    public List<DepositAddress> getDepositAddresses(String coin, String network) throws Exception {
+        String json = getDepositAddressesRaw(coin, network);
+        DepositAddress[] arr = gson.fromJson(json, DepositAddress[].class);
+        return arr == null ? java.util.List.of() : java.util.Arrays.asList(arr);
+    }
+
+    /** POST /api/v3/capital/deposit/address (generate if none exists for coin+network)
+     *  Permission: SPOT_WITHDRAW_WRITE
+     *  Docs: page 5 (Wallet Endpoints).
+     */
+    public String generateDepositAddressRaw(String coin, String network) throws Exception {
+        Map<String, String> q = new LinkedHashMap<>();
+        q.put("coin", coin);
+        q.put("network", network); // mandatory for POST (deposit generation)
+        q.put("recvWindow", String.valueOf(defaultRecvWindowMs));
+        q.put("timestamp", String.valueOf(now()));
+        String signed = signedQuery(q, "");
+
+        HttpRequest req = baseReqBuilder("/api/v3/capital/deposit/address?" + signed)
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+        return http.send(req, HttpResponse.BodyHandlers.ofString()).body();
+    }
+
+    /** Typed convenience for POST deposit address. Returns the entry for the requested network if present. */
+    public DepositAddress generateDepositAddress(String coin, String network) throws Exception {
+        String json = generateDepositAddressRaw(coin, network);
+        DepositAddress[] arr = gson.fromJson(json, DepositAddress[].class);
+        if (arr == null || arr.length == 0) return null;
+        for (DepositAddress da : arr) {
+            if (network.equalsIgnoreCase(da.network)) return da;
+        }
+        // Fallback: return the first if API didn’t echo a strict per-network record
+        return arr[0];
+    }
+
+    /** Get deposit address for the given coin+network; if missing, auto-create it.
+     *  Requires network because POST generation needs it.
+     *  GET shape: page 6; POST generation: page 5.
+     */
+    public DepositAddress getOrCreateDepositAddress(String coin, String network) throws Exception {
+        if (network == null || network.isBlank()) {
+            throw new IllegalArgumentException("network is required to create a new deposit address");
+        }
+        List<DepositAddress> existing = getDepositAddresses(coin, network);
+        for (DepositAddress da : existing) {
+            if (network.equalsIgnoreCase(da.network) && da.address != null && !da.address.isBlank()) {
+                return da;
+            }
+        }
+        // Not found – generate
+        DepositAddress created = generateDepositAddress(coin, network);
+        if (created == null || created.address == null || created.address.isBlank()) {
+            throw new IllegalStateException("Failed to generate deposit address for " + coin + " on " + network);
+        }
+        return created;
+    }
+
+    /** GET /api/v3/capital/deposit/hisrec
+     *  Optional: coin, status, startTime, endTime, limit
+     *  Notes: defaults to last 7 days; up to 90 days; see status codes in DTO.
+     *  Docs: pages 3–4 (Wallet Endpoints).
+     */
+    public String getDepositHistoryRaw(String coin, String status, Long startTimeMs, Long endTimeMs, Integer limit) throws Exception {
+        Map<String, String> q = new LinkedHashMap<>();
+        if (coin != null) q.put("coin", coin);
+        if (status != null) q.put("status", status);
+        if (startTimeMs != null) q.put("startTime", String.valueOf(startTimeMs));
+        if (endTimeMs != null) q.put("endTime", String.valueOf(endTimeMs));
+        if (limit != null) q.put("limit", String.valueOf(limit));
+        q.put("recvWindow", String.valueOf(defaultRecvWindowMs));
+        q.put("timestamp", String.valueOf(now()));
+        String signed = signedQuery(q, "");
+
+        HttpRequest req = baseReqBuilder("/api/v3/capital/deposit/hisrec?" + signed)
+                .GET()
+                .build();
+        return http.send(req, HttpResponse.BodyHandlers.ofString()).body();
+    }
+
+    /** Typed convenience for deposit history. */
+    public List<DepositHistoryItem> getDepositHistory(String coin, String status, Long startTimeMs, Long endTimeMs, Integer limit) throws Exception {
+        String json = getDepositHistoryRaw(coin, status, startTimeMs, endTimeMs, limit);
+        DepositHistoryItem[] arr = gson.fromJson(json, DepositHistoryItem[].class);
+        return arr == null ? java.util.List.of() : java.util.Arrays.asList(arr);
+    }
+
+    /** GET /api/v3/capital/withdraw/history
+     *  Optional: coin, status, startTime, endTime, limit
+     *  Notes: defaults to last 7 days; up to 90 days; network field may be absent on some rows.
+     *  Docs: pages 4–5 (Wallet Endpoints).
+     */
+    public String getWithdrawHistoryRaw(String coin, String status, Long startTimeMs, Long endTimeMs, Integer limit) throws Exception {
+        Map<String, String> q = new LinkedHashMap<>();
+        if (coin != null) q.put("coin", coin);
+        if (status != null) q.put("status", status);
+        if (limit != null) q.put("limit", String.valueOf(limit));
+        if (startTimeMs != null) q.put("startTime", String.valueOf(startTimeMs));
+        if (endTimeMs != null) q.put("endTime", String.valueOf(endTimeMs));
+        q.put("recvWindow", String.valueOf(defaultRecvWindowMs));
+        q.put("timestamp", String.valueOf(now()));
+        String signed = signedQuery(q, "");
+
+        HttpRequest req = baseReqBuilder("/api/v3/capital/withdraw/history?" + signed)
+                .GET()
+                .build();
+        return http.send(req, HttpResponse.BodyHandlers.ofString()).body();
+    }
+
+    /** Typed convenience for withdrawal history. */
+    public List<WithdrawHistoryItem> getWithdrawHistory(String coin, String status, Long startTimeMs, Long endTimeMs, Integer limit) throws Exception {
+        String json = getWithdrawHistoryRaw(coin, status, startTimeMs, endTimeMs, limit);
+        WithdrawHistoryItem[] arr = gson.fromJson(json, WithdrawHistoryItem[].class);
+        return arr == null ? java.util.List.of() : java.util.Arrays.asList(arr);
+    }
+
     /* -----------------------------------------------------------
      * Utilities you might want:
      *  - Query single order: GET /api/v3/order (status/filled qty etc.). :contentReference[oaicite:13]{index=13}
@@ -392,4 +523,47 @@ public class MexcSpotClient {
      *  - List all orders (up to 7 days): GET /api/v3/allOrders. :contentReference[oaicite:15]{index=15}
      *  Implement similarly to getAccountInfoRaw() using signedQuery().
      * ----------------------------------------------------------- */
+
+    // ---- Wallet DTOs ----
+    public static class DepositAddress {
+        public String coin;
+        public String network;  // deposit network (e.g., TRC20, ERC20, BEP20(BSC), EOS)
+        public String address;
+        public String memo;     // aka tag / destination tag (if required by network)
+        public String tag;      // some responses use "tag" instead of "memo"
+    }
+
+    public static class DepositHistoryItem {
+        public String amount;
+        public String coin;
+        public String network;       // may be absent for some legacy entries
+        public Integer status;       // 1:SMALL,2:TIME_DELAY,3:LARGE_DELAY,4:PENDING,5:SUCCESS,6:AUDITING,7:REJECTED,8:REFUND,9:PRE_SUCCESS,10:INVALID,11:RESTRICTED,12:COMPLETED
+        public String address;
+        public String txId;
+        public Long insertTime;
+        public String unlockConfirm;
+        public String confirmTimes;
+        public String memo;
+    }
+
+    public static class WithdrawHistoryItem {
+        public String id;
+        public String txId;
+        public String coin;
+        public String network;       // “Supported multiple network coins’ withdraw history may not return the 'network' field”
+        public String address;
+        public String amount;
+        public Integer transferType; // 0: outside, 1: inside transfer
+        public Integer status;       // 1:APPLY,2:AUDITING,3:WAIT,4:PROCESSING,5:WAIT_PACKAGING,6:WAIT_CONFIRM,7:SUCCESS,8:FAILED,9:CANCEL,10:MANUAL
+        public String transactionFee;
+        public String confirmNo;
+        public Long applyTime;
+        public String remark;
+        public String memo;
+        public String transHash;
+        public Long updateTime;
+        public String coinId;
+        public String vcoinId;
+        public String withdrawOrderId;
+    }
 }

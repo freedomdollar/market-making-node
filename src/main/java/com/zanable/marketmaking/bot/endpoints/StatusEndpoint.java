@@ -74,8 +74,12 @@ public class StatusEndpoint {
             statusResponse.setCurrentAskPrice(ZanoPriceService.getDexAskPriceInZano());
             statusResponse.setCurrentBidPrice(ZanoPriceService.getDexBidPriceInZano());
 
-            statusResponse.setCurrentZanoPriceAskWeighted(ZanoPriceService.getLastWeightedAsk());
-            statusResponse.setCurrentZanoPriceBidWeighted(ZanoPriceService.getLastWeightedBid());
+            if (OrderBookAggregatorService.getAsksAggregated() != null && !OrderBookAggregatorService.getAsksAggregated().isEmpty()) {
+                statusResponse.setCurrentZanoPriceAskWeighted(OrderBookAggregatorService.getAsksAggregated().getFirst().getPrice());
+            }
+            if (OrderBookAggregatorService.getBidsAggregated() != null && !OrderBookAggregatorService.getBidsAggregated().isEmpty()) {
+                statusResponse.setCurrentZanoPriceBidWeighted(OrderBookAggregatorService.getBidsAggregated().getFirst().getPrice());
+            }
 
             if (ZanoPriceService.getLastCoinex() != null) {
                 statusResponse.setLastCoinexActivityTimestamp(ZanoPriceService.getLastCoinex().getTime());
@@ -167,6 +171,7 @@ public class StatusEndpoint {
 
             return new ResponseEntity<MmStatusResponse>(statusResponse, HttpStatus.ACCEPTED);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<MmStatusResponse>(new MmStatusResponse(), HttpStatus.SERVICE_UNAVAILABLE);
         }
     }

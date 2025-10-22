@@ -413,15 +413,12 @@ public class ZanoTradeService implements ApplicationService {
                                     proposalAmount.movePointRight(zanoDecimals).toBigInteger(), "buy", txId, timestamp,
                                     sellPrice.movePointRight(12).toBigInteger(), zanoPriceUsdt, swapProposalInfo.getTo_finalizer()[0].getAsset_id(), seqId);
 
-                            // Add to buy back
-                            // Cut it up into pieces
-                            if (SettingsService.getAppSettingSafe("enable_fusd_sell") != null && SettingsService.getAppSettingSafe("enable_usdt_buy").equals("1")) {
-                                BigDecimal tokensAmount = tokensSold.add(BigDecimal.ZERO);
-                                BigDecimal price = amount.divide(tokensAmount, 4, RoundingMode.HALF_UP);
-
-                                for (BigDecimal amountToBuyBack : cutupBuyBackAmounts(new ArrayList<BigDecimal>(), tokensAmount)) {
-                                    DatabaseService.insertZanoBuyBack(null, myOrderId, amountToBuyBack, amountToBuyBack.multiply(price));
-                                }
+                            // Run the fUSD sell seq on the CEX
+                            if (SettingsService.getAppSettingSafe("enable_fusd_sell") != null && SettingsService.getAppSettingSafe("enable_fusd_sell").equals("1")) {
+                                DatabaseService.insertFusdToUsdtCexOrder(null, myOrderId, BigDecimal.ZERO, tokensProposed, seqId);
+                                logger.info("Inserted fUSD -> USDT sell order for CEX trading service");
+                            } else {
+                                logger.info("Not inserting fUSD -> USDT sell order, enable_fusd_sell is " + SettingsService.getAppSettingSafe("enable_fusd_sell"));
                             }
 
                             // Set left

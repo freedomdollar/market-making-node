@@ -23,6 +23,9 @@ public class AppSettingsBean {
 
     private boolean zanoSellEnabled = false;
     private boolean fusdBuyEnabled = false;
+    private boolean zanoBuyEnabled = false;
+    private boolean fusdSellEnabled = false;
+
     private boolean zanoMoveFromWalletEnabled = false;
     private boolean mexcFusdWithdrawEnabled = false;
     private boolean autoStartDexTradeBot = false;

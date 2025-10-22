@@ -421,19 +421,24 @@ function renderRowsBuy(payload) {
         const zanoUsdtRef = tr.zanoUsdtPrice;
 
         // MEXC SELL step
-        const mx = tr.zanoBuyOrder || null;
-        const mxZano = mx ? mx.firstAmount : null;
-        const mxPrice = mx ? mx.price : null;
-        const mxUsdt = mx ? mx.secondAmount : null;
-        const mxUsdtTarget = mx ? mx.secondAmountTarget : null;
-        const mxSoldPercent = (mxUsdtTarget / mxPrice) / mxZano * 100;
-        var mxStatus = mx ? mx.status : null;
-        if (mxStatus == 1) {
-            mxStatus = 3;
-        }
-        const mxStatusStr = mx ? mx.statusString : null;
-        const mxTs = mx ? mx.timestamp : null;
-        var zanoSoldString = " ";
+        const mxFusdSell = tr.fusdSellOrder || null;
+        const mxFusdSellFusdAmount = mxFusdSell ? mxFusdSell.firstAmount : null;
+        const mxFusdSellPrice = mxFusdSell ? mxFusdSell.price : null;
+        const mxFusdSellUsdtAmount = mxFusdSell ? mxFusdSell.secondAmount : null;
+        var mxFusdStatus = mxFusdSell ? mxFusdSell.status : null;
+
+        const mxFusdStatusStr = mxFusdSell ? mxFusdSell.statusString : null;
+        const mxFusdTs = mxFusdSell ? mxFusdSell.timestamp : null;
+
+        // MEXC BUY step
+        const mxZanoBuy = tr.zanoBuyOrder || null;
+        const mxZanoBuyZano = mxZanoBuy ? mxZanoBuy.firstAmount : null;
+        const mxZanoBuyPrice = mxZanoBuy ? mxZanoBuy.price : null;
+        const mxZanoBuyUsdt = mxZanoBuy ? mxZanoBuy.secondAmount : null;
+        const mxZanoBuyUsdtTarget = mxZanoBuy ? mxZanoBuy.secondAmountTarget : null;
+        const mxZanoBuyPercent = (mxZanoBuyUsdtTarget / mxZanoBuyPrice) / mxZanoBuyZano * 100;
+        const mxZanoBuyStatus = mxZanoBuy ? mxZanoBuy.status : null;
+        const mxZanoBuyTs = mxZanoBuy ? mxZanoBuy.timestamp : null;
 
         const $tr = $("<tr>");
 
@@ -446,12 +451,21 @@ function renderRowsBuy(payload) {
             $("<td>").text(fmtFloat(zanoReceived, 12)),
             $("<td class='colsecr'>").text(fmtFloat(zanoUsdtRef, 8)),
 
-            // MEXC SELL
-            $("<td>").text(fmtFloat(mxZano, 12) + zanoSoldString),
-            $("<td>").text(fmtFloat(mxPrice, 6)),
-            $("<td>").text(fmtFloat(mxUsdt, 6)),
-            $("<td>").append(mx ? badgeForStatus(mxStatus, mxStatusStr) : $("<span>").addClass("text-muted").text("—"))
-                .append(mx ? $("<div>").addClass("text-muted small").text(fmtTime(mxTs)) : ""),
+            // MEXC SELL fUSD
+            $("<td>").text(fmtFloat(mxFusdSellFusdAmount, 4)),
+            $("<td>").text(fmtFloat(mxFusdSellPrice, 4)),
+            $("<td>").text(fmtFloat(mxFusdSellUsdtAmount, 4)),
+            $("<td>").append(mxFusdSell ? badgeForStatus(mxFusdStatus, mxFusdStatusStr) : $("<span>").addClass("text-muted").text("—"))
+                .append(mxFusdSell ? $("<div>").addClass("text-muted small").text(fmtTime(mxFusdTs)) : ""),
+
+            // MEXC BUY ZANO
+            $("<td>").text(fmtFloat(mxZanoBuyZano, 4)),
+            $("<td>").text(fmtFloat(mxZanoBuyPrice, 4)),
+            $("<td>").text(fmtFloat(mxZanoBuyUsdt, 4)),
+            $("<td>").append(mxZanoBuy ? badgeForStatus(mxZanoBuyStatus, "") : $("<span>").addClass("text-muted").text("—"))
+                .append(mxZanoBuy ? $("<div>").addClass("text-muted small").text(fmtTime(mxZanoBuyTs)) : ""),
+
+
         );
 
         // Optional visual hint: if MEXC SELL failed, emphasize the row slightly by title

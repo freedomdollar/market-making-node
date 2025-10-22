@@ -143,6 +143,9 @@ public class ZanoWalletService implements ApplicationService {
                         SettingsService.saveAppSetting("pending_alias_tx", null);
                     }
                 }
+                if (SettingsService.getAppSettingSafe("pending_alias_tx") != null && walletAlias != null && !walletAlias.isEmpty()) {
+                    SettingsService.saveAppSetting("pending_alias_tx", null);
+                }
             }
         } catch (NoApiResponseException e) {
             throw new RuntimeException(e);
@@ -260,11 +263,31 @@ public class ZanoWalletService implements ApplicationService {
     }
 
     public static GetWalletBalanceResponse.AssetBalance getFloatTokensDataMain() {
+        if (floatTokensBalanceWalletMain == null) {
+            return getEmptyAssetBalance();
+        }
         return floatTokensBalanceWalletMain;
     }
 
     public static GetWalletBalanceResponse.AssetBalance getZanoDataMain() {
+        if (zanoBalanceWalletMain == null) {
+            return getEmptyAssetBalance();
+        }
         return zanoBalanceWalletMain;
+    }
+
+    private static GetWalletBalanceResponse.AssetBalance getEmptyAssetBalance() {
+        GetWalletBalanceResponse.AssetBalance emptyAssets = new GetWalletBalanceResponse.AssetBalance();
+
+        emptyAssets.setTotal(BigInteger.ZERO);
+        emptyAssets.setUnlocked(BigInteger.ZERO);
+        emptyAssets.setAwaiting_in(BigInteger.ZERO);
+        emptyAssets.setAwaiting_out(BigInteger.ZERO);
+        emptyAssets.setOuts_amount_max(BigInteger.ZERO);
+        emptyAssets.setOuts_amount_min(BigInteger.ZERO);
+        emptyAssets.setOuts_count(0L);
+
+        return emptyAssets;
     }
 
     private void checkNewBlockAndTransactions(boolean firstCheck) throws NoApiResponseException {
@@ -722,6 +745,65 @@ public class ZanoWalletService implements ApplicationService {
         return alias;
     }
 
+    public static AliasDetails getAliasDetails(String alias) throws NoApiResponseException {
+        JSONObject payload = new JSONObject();
+        payload.put("jsonrpc", "2.0");
+        payload.put("id", 0);
+        payload.put("method", "get_alias_details");
+        JSONObject params = new JSONObject();
+        params.put("alias", alias);
+
+        payload.put("params", params);
+        JSONObject responseBody = sendRequest(rpcDaemonAddress, payload);
+        System.out.println(responseBody);
+        if (responseBody.containsKey("result")) {
+            JSONObject aliasDetailsJson = (JSONObject) ((JSONObject) responseBody.get("result")).get("alias_details");
+            AliasDetails aliasDetails = new AliasDetails();
+            aliasDetails.setAlias((String) aliasDetailsJson.get("alias"));
+            aliasDetails.setBaseAddress((String) aliasDetailsJson.get("address"));
+            aliasDetails.setComment((String) aliasDetailsJson.get("comment"));
+            aliasDetails.setTrackingKey((String) aliasDetailsJson.get("tracking_key"));
+            return aliasDetails;
+        }
+        return null;
+    }
+
+    public static String getAliasCommentByAddress(String address) throws NoApiResponseException {
+        JSONObject payload = new JSONObject();
+        payload.put("jsonrpc", "2.0");
+        payload.put("id", 0);
+        payload.put("method", "get_alias_by_address");
+        payload.put("params", address);
+        JSONObject adressRep = (JSONObject) sendRequest(rpcDaemonAddress, payload).get("result");
+        JSONArray aliasInfoList = (JSONArray) adressRep.get("alias_info_list");
+        String alias = null;
+        if (aliasInfoList != null) {
+            JSONObject aliasInfo = (JSONObject) aliasInfoList.get(0);
+            alias = (String) aliasInfo.get("comment");
+        }
+        return alias;
+    }
+
+    public static boolean validateAddress(String address) {
+        try {
+            JSONObject payload = new JSONObject();
+            payload.put("jsonrpc", "2.0");
+            payload.put("id", 0);
+            payload.put("method", "get_integrated_address");
+
+            JSONObject params = new JSONObject();
+            params.put("payment_id", "11111111");
+            params.put("regular_address", address);
+
+            payload.put("params", params);
+            JSONObject adressRep = (JSONObject) sendRequest(rpcDaemonAddress, payload).get("result");
+            String integratedAddress = (String) adressRep.get("integrated_address");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public static String setAlias(String alias, String comment) throws ZanoWalletException, NoApiResponseException {
         JSONObject payload = new JSONObject();
         payload.put("jsonrpc", "2.0");
@@ -761,11 +843,12 @@ public class ZanoWalletService implements ApplicationService {
         JSONObject payload = new JSONObject();
         payload.put("jsonrpc", "2.0");
         payload.put("id", 0);
-        payload.put("method", "integrated_address");
+        //payload.put("method", "integrated_address");
+        payload.put("method", "split_integrated_address");
         JSONObject params = new JSONObject();
         params.put("integrated_address", intAddress);
         payload.put("params", params);
-        JSONObject adressRep = (JSONObject) sendRequest(rpcDaemonAddress, payload).get("result");
+        JSONObject adressRep = (JSONObject) sendRequest(rpcWalletAddress, payload).get("result");
         IntegratedAddress IntegratedAddress = new IntegratedAddress((String) adressRep.get("standard_address"), (String) adressRep.get("payment_id"));
         return IntegratedAddress;
     }
@@ -1006,36 +1089,22 @@ public class ZanoWalletService implements ApplicationService {
     }
 
     public static SendResponse sendCoinsAnon(String address, long amount, String assetId, String comment) throws NoApiResponseException {
-        return sendCoins(address, amount, comment, 1, assetId, rpcWalletAddress, false);
+        return sendCoins(address, BigInteger.valueOf(amount), comment, 1, assetId, rpcWalletAddress, false, null);
+    }
+
+    public static SendResponse sendCoinsAnon(String address, long amount, String assetId, String comment, String paymentId) throws NoApiResponseException {
+        return sendCoins(address, BigInteger.valueOf(amount), comment, 1, assetId, rpcWalletAddress, true, paymentId);
+    }
+
+    public static SendResponse sendCoins(String address, BigInteger amount, String assetId, String comment, String paymentId) throws NoApiResponseException {
+        return sendCoins(address, amount, comment, 1, assetId, rpcWalletAddress, true, paymentId);
     }
 
     public static SendResponse sendCoins(String address, long amount, String comment, long number, String assetId, String rpcWallet) throws NoApiResponseException {
-        return sendCoins(address, amount, comment, number, assetId, rpcWalletAddress, true);
+        return sendCoins(address, BigInteger.valueOf(amount), comment, number, assetId, rpcWalletAddress, true, null);
     }
 
-    public static SendResponse sendCoins(String address, long amount, String comment, long number, String assetId, String rpcWallet, boolean pushPayer) throws NoApiResponseException {
-        /*
-        {
-          "jsonrpc": "2.0",
-          "id": 0,
-          "method": "transfer",
-          "params": {
-            "destinations": [
-              {
-                "amount": 1000000000,
-                "address": "ZxCkEgHf3ci8hgBfboZeCENaYrHBYZ1bLFi5cgWvn4WJLaxfgs4kqG6cJi9ai2zrXWSCpsvRXit14gKjeijx6YPC1zT8rneEf"
-              }
-            ],
-            "push_payer": true,
-            "hide_receiver": false,
-            "service_entries_permanent": false,
-            "fee": 1000000000000,
-            "mixin": 10,
-            "comment": "",
-            "service_entries": []
-          }
-        }
-         */
+    public static SendResponse sendCoins(String address, BigInteger amount, String comment, long number, String assetId, String rpcWallet, boolean pushPayer, String paymentId) throws NoApiResponseException {
         JSONObject destination = new JSONObject();
         destination.put("amount", amount);
         destination.put("address", address);
@@ -1056,12 +1125,17 @@ public class ZanoWalletService implements ApplicationService {
 
         JSONObject params = new JSONObject();
         params.put("destinations", destinations);
+        if (!address.startsWith("i") && paymentId != null) {
+            params.put("payment_id", paymentId);
+        }
         params.put("push_payer", true);
         params.put("hide_receiver", false);
         params.put("service_entries_permanent", false);
         params.put("fee", 10000000000L);
-        params.put("mixin", 7);
-        params.put("comment", comment);
+        params.put("mixin", 15);
+        if (comment != null && !comment.isEmpty()) {
+            params.put("comment", comment);
+        }
         payload.put("params", params);
         logger.info("Sending coins");
         logger.info(payload.toJSONString());

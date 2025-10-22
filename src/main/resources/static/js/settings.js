@@ -19,6 +19,8 @@ const SETTINGS_SCHEMA = [
     { section: "Core Toggles" },
     { key:"zanoSellEnabled",            label:"Enable ZANO sell on CEX after SELL",        type:"boolean" },
     { key:"fusdBuyEnabled",             label:"Enable fUSD buy on CEX after SELL",  type:"boolean" },
+    { key:"zanoBuyEnabled",            label:"Enable ZANO buy on CEX after BUY",        type:"boolean" },
+    { key:"fusdSellEnabled",             label:"Enable fUSD sell on CEX after BUY",  type:"boolean" },
     { key:"zanoMoveFromWalletEnabled",  label:"Allow moving ZANO from wallet",  type:"boolean" },
     { key:"mexcFusdWithdrawEnabled",    label:"Enable fUSD withdrawals on CEX", type:"boolean" },
     { key:"autoStartDexTradeBot",       label:"Enable autostart of DEX trade bot", type:"boolean" },

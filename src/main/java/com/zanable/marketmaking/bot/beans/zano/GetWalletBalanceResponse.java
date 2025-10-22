@@ -17,7 +17,7 @@ public class GetWalletBalanceResponse {
     @Getter
     @Setter
     @ToString
-    public class AssetBalance {
+    public static class AssetBalance {
         private AssetInfo asset_info;
         private BigInteger awaiting_in;
         private BigInteger awaiting_out;

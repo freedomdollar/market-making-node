@@ -1,10 +1,7 @@
 package com.zanable.marketmaking.bot;
 
-import com.zanable.marketmaking.bot.beans.AppStatusBean;
-import com.zanable.marketmaking.bot.beans.BotDashNew;
 import com.zanable.marketmaking.bot.services.*;
 import com.zanable.shared.interfaces.ApplicationService;
-import com.zanable.shared.services.SigningEngine;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,17 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.yaml.snakeyaml.Yaml;
 
 import javax.naming.NameNotFoundException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -173,7 +163,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         try {
             if (!isCexTradeServiceStarted&& SettingsService.getAppSetting("mexc_apikey") != null && SettingsService.getAppSetting("mexc_apisecret") != null) {
                 isCexTradeServiceStarted = true;
-                CexTradeSettings cexTradeSettings = new CexTradeSettings();
+                CexTradeService cexTradeSettings = new CexTradeService();
                 cexTradeSettings.init();
                 serviceList.add(cexTradeSettings);
             }

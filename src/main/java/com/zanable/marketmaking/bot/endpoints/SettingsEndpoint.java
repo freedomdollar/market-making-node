@@ -70,11 +70,17 @@ public class SettingsEndpoint {
                     appSettingsBean.setFusdBuyEnabled(true);
                 }
             }
-            if (SettingsService.getAppSettingSafe("enable_fusd_buy") != null) {
-                if (SettingsService.getAppSettingSafe("enable_fusd_buy").equals("1")) {
-                    appSettingsBean.setFusdBuyEnabled(true);
+            if (SettingsService.getAppSettingSafe("enable_zano_buy") != null) {
+                if (SettingsService.getAppSettingSafe("enable_zano_buy").equals("1")) {
+                    appSettingsBean.setZanoBuyEnabled(true);
                 }
             }
+            if (SettingsService.getAppSettingSafe("enable_fusd_sell") != null) {
+                if (SettingsService.getAppSettingSafe("enable_fusd_sell").equals("1")) {
+                    appSettingsBean.setFusdSellEnabled(true);
+                }
+            }
+
             if (SettingsService.getAppSettingSafe("enable_move_to_cex") != null) {
                 if (SettingsService.getAppSettingSafe("enable_move_to_cex").equals("1")) {
                     appSettingsBean.setZanoMoveFromWalletEnabled(true);

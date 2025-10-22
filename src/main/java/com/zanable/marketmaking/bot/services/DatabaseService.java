@@ -1,11 +1,10 @@
 package com.zanable.marketmaking.bot.services;
 
 import com.zanable.marketmaking.bot.ApplicationStartup;
+import com.zanable.marketmaking.bot.beans.WalletTransaction;
 import com.zanable.marketmaking.bot.beans.api.ExtendedTradeChain;
-import com.zanable.marketmaking.bot.beans.market.FusdUsdtBuyReq;
-import com.zanable.marketmaking.bot.beans.market.SimplifiedTrade;
+import com.zanable.marketmaking.bot.beans.market.*;
 import com.zanable.marketmaking.bot.beans.zano.*;
-import com.zanable.marketmaking.bot.beans.market.ZanoSellReq;
 import com.zanable.marketmaking.bot.enums.TradeType;
 import com.zanable.shared.interfaces.ApplicationService;
 import org.json.simple.JSONArray;
@@ -131,6 +130,76 @@ public class DatabaseService implements ApplicationService {
         }
     }
 
+    public static void insertFusdToUsdtCexOrder(Connection conn, long orderId, BigDecimal usdtAmount, BigDecimal fusdAmount, UUID seqId) {
+        boolean connWasNull = false;
+        try {
+
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            String query = "INSERT INTO fusd_to_usdt_cex_trade_log (connected_order, timestamp, usdt_amount, fusd_amount, seq_id) VALUES (?,NOW(),?,?,?);";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setLong(1, orderId);
+            ps.setBigDecimal(2, usdtAmount);
+            ps.setBigDecimal(3, fusdAmount);
+            ps.setString(4, seqId.toString());
+            ps.execute();
+            ps.close();
+
+            if (connWasNull) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void insertUsdtToZanoCexOrder(Connection conn, long orderId, BigDecimal usdtAmount, BigDecimal zanoPrice, UUID seqId) {
+        boolean connWasNull = false;
+        try {
+
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            String query = "INSERT INTO usdt_to_zano_cex_trade_log (connected_order, timestamp, usdt_amount, price, seq_id) VALUES (?,NOW(),?,?,?);";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setLong(1, orderId);
+            ps.setBigDecimal(2, usdtAmount);
+            ps.setBigDecimal(3, zanoPrice);
+            ps.setString(4, seqId.toString());
+            ps.execute();
+            ps.close();
+
+            if (connWasNull) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateUsdtToZanoBuyOrder(long id, int status, BigDecimal amountExecuted) {
+        PreparedStatement ps = null;
+        Connection conn;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement("UPDATE usdt_to_zano_cex_trade_log SET status=?, zano_amount_filled=? WHERE id=?");
+            ps.setInt(1, status);
+            ps.setBigDecimal(2, amountExecuted);
+            ps.setLong(3, id);
+            int rows = ps.executeUpdate();
+
+            ps.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void updateZanoSellOrder(long id, int status, BigDecimal amountFilled, String orderId) {
         PreparedStatement ps = null;
         Connection conn;
@@ -182,6 +251,51 @@ public class DatabaseService implements ApplicationService {
             ps.setString(3, orderId);
             ps.setBigDecimal(4, price);
             ps.setLong(5, id);
+            int rows = ps.executeUpdate();
+
+            ps.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateUsdtToZanoBuyOrder(long id, int status, BigDecimal price, BigDecimal zanoAmount, String cexOrderId) {
+        PreparedStatement ps = null;
+        Connection conn;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement("UPDATE usdt_to_zano_cex_trade_log SET status=?, cex_order_id=?, price=?, zano_amount=? WHERE id=?");
+            ps.setInt(1, status);
+            ps.setString(2, cexOrderId);
+            ps.setBigDecimal(3, price);
+            ps.setBigDecimal(4, zanoAmount);
+            ps.setLong(5, id);
+            int rows = ps.executeUpdate();
+
+            ps.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateFusdSellOrderCex(long id, int status, BigDecimal usdtAmount, BigDecimal fusdAmountExecuted, String orderId, BigDecimal price) {
+        PreparedStatement ps = null;
+        Connection conn;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement("UPDATE fusd_to_usdt_cex_trade_log SET status=?, usdt_amount=?, fusd_amount_filled=?, cex_order_id=?, price=? WHERE id=?");
+            ps.setInt(1, status);
+            ps.setBigDecimal(2, usdtAmount);
+            ps.setBigDecimal(3, fusdAmountExecuted);
+            ps.setString(4, orderId);
+            ps.setBigDecimal(5, price);
+            ps.setLong(6, id);
             int rows = ps.executeUpdate();
 
             ps.close();
@@ -426,7 +540,8 @@ public class DatabaseService implements ApplicationService {
                 }
 
                 if (extendedTradeChain.getSeqId() != null) {
-                    extendedTradeChain.setZanoBuyOrder(getZanoBuybackOrder(extendedTradeChain.getSeqId()));
+                    extendedTradeChain.setFusdSellOrder(DatabaseService.getFusdToUsdtCexTrade(extendedTradeChain.getSeqId()));
+                    extendedTradeChain.setZanoBuyOrder(DatabaseService.getUsdtToZanoCexTrade(extendedTradeChain.getSeqId()));
                 }
 
                 trades.add(extendedTradeChain);
@@ -436,6 +551,109 @@ public class DatabaseService implements ApplicationService {
             e.printStackTrace();
         }
         return trades;
+    }
+
+    public static List<WalletTransaction> getWalletTransactions(Connection conn, String walletIdent, long page, long pageSize) {
+
+        List<WalletTransaction> txList = new ArrayList<>();
+        boolean connWasNull = false;
+        try {
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            PreparedStatement ps = conn.prepareStatement("SELECT A.txid, amount, ticker, full_name, C.id AS swap_id, remote_alias, tx_index, remote_address, " +
+                    "A.asset_id, height, is_income, vout, timestamp, decimals, is_mining  " +
+                    "FROM zano_wallet_transactions A LEFT JOIN zano_assets B ON (A.asset_id = B.asset_id) " +
+                    "LEFT JOIN swaps C ON (C.txid = A.txid) WHERE A.wallet_ident=? ORDER BY timestamp DESC LIMIT ? OFFSET ?;");
+            ps.setString(1, walletIdent);
+            ps.setLong(2, pageSize);
+            ps.setLong(3, pageSize*page);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                WalletTransaction walletTransaction = new WalletTransaction();
+                walletTransaction.setTxId(rs.getString("txid"));
+                walletTransaction.setAmount(new BigDecimal(rs.getString("amount")).movePointLeft(rs.getInt("decimals")));
+                walletTransaction.setTicker(rs.getString("ticker"));
+                walletTransaction.setFullName(rs.getString("full_name"));
+                walletTransaction.setRemoteAlias(rs.getString("remote_alias"));
+                walletTransaction.setTransactionIndex(rs.getLong("tx_index"));
+                walletTransaction.setRemoteAddress(rs.getString("remote_address"));
+                walletTransaction.setAssetId(rs.getString("asset_id"));
+                walletTransaction.setHeight(rs.getLong("height"));
+                walletTransaction.setIncome(rs.getBoolean("is_income"));
+                walletTransaction.setSubTransferIndex(rs.getInt("vout"));
+                walletTransaction.setTimestamp(rs.getTimestamp("timestamp"));
+                walletTransaction.setSwapId(rs.getLong("swap_id"));
+                walletTransaction.setMining(rs.getBoolean("is_mining"));
+
+                // Maybe it's a move to a CEX?
+                if (walletTransaction.getSwapId() == 0) {
+                    String ident = getZanoMoveDestIdent(null, walletTransaction.getTxId());
+                    if (ident != null) {
+                        walletTransaction.setRemoteAlias(ident);
+                    }
+                }
+
+                txList.add(walletTransaction);
+            }
+            if (!connWasNull) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return txList;
+    }
+
+    public static long getWalletTransactionsItems(Connection conn, String walletIdent) {
+
+        long items = 0;
+        boolean connWasNull = false;
+        try {
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS count " +
+                    "FROM zano_wallet_transactions A LEFT JOIN zano_assets B ON (A.asset_id = B.asset_id) " +
+                    "LEFT JOIN swaps C ON (C.txid = A.txid) WHERE A.wallet_ident=? ORDER BY timestamp;");
+            ps.setString(1, walletIdent);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                items = rs.getLong("count");
+            }
+            if (!connWasNull) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return items;
+    }
+
+    public static String getZanoMoveDestIdent(Connection conn, String txid) {
+
+        String ident = null;
+        boolean connWasNull = false;
+        try {
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            PreparedStatement ps = conn.prepareStatement("SELECT to_ident FROM zano_moves WHERE txid=?;");
+            ps.setString(1, txid);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                ident = rs.getString("to_ident");
+            }
+            if (!connWasNull) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ident;
     }
 
     public static UUID updateUsdtBuyOrderWithUUID(long id) {
@@ -515,6 +733,24 @@ public class DatabaseService implements ApplicationService {
         return simplifiedTrade;
     }
 
+    public static BigDecimal getZanoPriceFromOrder(long orderId) {
+        BigDecimal zanoPrice = null;
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("SELECT * " +
+                    "FROM order_log WHERE order_id=?;");
+            ps.setLong(1, orderId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                zanoPrice = rs.getBigDecimal("zano_usdt_price");
+            }
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return zanoPrice;
+    }
+
     public static SimplifiedTrade getFusdBuyorder(UUID seqId) {
         SimplifiedTrade simplifiedTrade = null;
         try {
@@ -549,6 +785,62 @@ public class DatabaseService implements ApplicationService {
             Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement("SELECT * " +
                     "FROM zano_buy_back_log WHERE seq_id=?;");
+            ps.setString(1, seqId.toString());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                simplifiedTrade = SimplifiedTrade.builder()
+                        .firstCurrency("ZANO")
+                        .secondCurrency("USDT")
+                        .firstAmount(rs.getBigDecimal("zano_amount"))
+                        .secondAmount(rs.getBigDecimal("usdt_amount"))
+                        .status(rs.getInt("status"))
+                        .price(rs.getBigDecimal("price"))
+                        .seqId(seqId)
+                        .timestamp(rs.getTimestamp("timestamp"))
+                        .type("BUY")
+                        .build();
+            }
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return simplifiedTrade;
+    }
+
+    public static SimplifiedTrade getFusdToUsdtCexTrade(UUID seqId) {
+        SimplifiedTrade simplifiedTrade = null;
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("SELECT * " +
+                    "FROM fusd_to_usdt_cex_trade_log WHERE seq_id=?;");
+            ps.setString(1, seqId.toString());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                simplifiedTrade = SimplifiedTrade.builder()
+                        .firstCurrency("FUSD")
+                        .secondCurrency("USDT")
+                        .firstAmount(rs.getBigDecimal("fusd_amount"))
+                        .secondAmount(rs.getBigDecimal("usdt_amount"))
+                        .status(rs.getInt("status"))
+                        .price(rs.getBigDecimal("price"))
+                        .seqId(seqId)
+                        .timestamp(rs.getTimestamp("timestamp"))
+                        .type("SELL")
+                        .build();
+            }
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return simplifiedTrade;
+    }
+
+    public static SimplifiedTrade getUsdtToZanoCexTrade(UUID seqId) {
+        SimplifiedTrade simplifiedTrade = null;
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("SELECT * " +
+                    "FROM usdt_to_zano_cex_trade_log WHERE seq_id=?;");
             ps.setString(1, seqId.toString());
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -1100,6 +1392,67 @@ public class DatabaseService implements ApplicationService {
             e.printStackTrace();
         }
         return orderIds;
+    }
+
+    public static List<FusdSellReq> getPendingFusdSellOrdersCex() {
+
+        List<FusdSellReq> orders = new ArrayList<FusdSellReq>();
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("SELECT * " +
+                    "FROM fusd_to_usdt_cex_trade_log WHERE status=0;");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                FusdSellReq fusdSellReq = FusdSellReq.builder()
+                        .id(rs.getLong("id"))
+                        .timestamp(rs.getTimestamp("timestamp"))
+                        .fusdAmount(rs.getBigDecimal("fusd_amount"))
+                        .fusdAmountFilled(rs.getBigDecimal("fusd_amount_filled"))
+                        .usdtAmount(rs.getBigDecimal("usdt_amount"))
+                        .zanoPrice(rs.getBigDecimal("price"))
+                        .cexOrderId(rs.getString("cex_order_id"))
+                        .seqId(UUID.fromString(rs.getString("seq_id")))
+                        .connectedOrderId(rs.getLong("connected_order"))
+                        .build();
+
+                orders.add(fusdSellReq);
+            }
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return orders;
+    }
+
+    public static List<ZanoBuyReq> getPendingZanoBuyOrdersCex() {
+
+        List<ZanoBuyReq> orders = new ArrayList<ZanoBuyReq>();
+        try {
+            Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("SELECT * " +
+                    "FROM usdt_to_zano_cex_trade_log WHERE status >= 0 AND status < 3;");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ZanoBuyReq zanoBuyReq = ZanoBuyReq.builder()
+                        .id(rs.getLong("id"))
+                        .timestamp(rs.getTimestamp("timestamp"))
+                        .usdtAmount(rs.getBigDecimal("usdt_amount"))
+                        .zanoAmount(rs.getBigDecimal("zano_amount"))
+                        .zanoAmountExecuted(rs.getBigDecimal("zano_amount_filled"))
+                        .zanoPrice(rs.getBigDecimal("price"))
+                        .cexOrderId(rs.getString("cex_order_id"))
+                        .seqId(UUID.fromString(rs.getString("seq_id")))
+                        .status(rs.getInt("status"))
+                        .connectedOrderId(rs.getLong("connected_order"))
+                        .build();
+
+                orders.add(zanoBuyReq);
+            }
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return orders;
     }
 
     /**

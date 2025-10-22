@@ -631,3 +631,37 @@ alter table zano_buy_back_log
 
 alter table fusd_buy_back_log
     add error varchar(512) null;
+
+CREATE TABLE `fusd_to_usdt_cex_trade_log` (
+                                              `id` bigint(20) NOT NULL AUTO_INCREMENT,
+                                              `timestamp` timestamp NOT NULL,
+                                              `usdt_amount` decimal(24,6) DEFAULT NULL,
+                                              `fusd_amount` decimal(32,12) DEFAULT NULL,
+                                              `fusd_amount_filled` decimal(24,6) NOT NULL DEFAULT 0.000000,
+                                              `price` decimal(24,6) NOT NULL DEFAULT 0.000000,
+                                              `status` int(11) NOT NULL DEFAULT 0,
+                                              `cex_order_id` varchar(128) DEFAULT NULL,
+                                              `seq_id` uuid DEFAULT NULL,
+                                              `connected_order` bigint(20) DEFAULT NULL,
+                                              `error` varchar(512) DEFAULT NULL,
+                                              PRIMARY KEY (`id`),
+                                              KEY `status_index` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
+
+
+CREATE TABLE `usdt_to_zano_cex_trade_log` (
+                                              `id` bigint(20) NOT NULL AUTO_INCREMENT,
+                                              `timestamp` timestamp NOT NULL,
+                                              `zano_amount` decimal(24,6) DEFAULT NULL,
+                                              `usdt_amount` decimal(32,12) NOT NULL DEFAULT 0.000000000000,
+                                              `zano_amount_filled` decimal(24,6) NOT NULL DEFAULT 0.000000,
+                                              `price` decimal(24,6) NOT NULL DEFAULT 0.000000,
+                                              `status` int(11) NOT NULL DEFAULT 0,
+                                              `cex_order_id` varchar(128) DEFAULT NULL,
+                                              `seq_id` uuid DEFAULT NULL,
+                                              `connected_order` bigint(20) DEFAULT NULL,
+                                              `error` varchar(512) DEFAULT NULL,
+                                              PRIMARY KEY (`id`),
+                                              KEY `usdt_to_zano_cex_trade_log_status_index` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;

@@ -60,8 +60,16 @@ public class BotDashDataNew {
                 }
             }
 
-            BigDecimal fusdBalanceWallet = new BigDecimal(ZanoWalletService.getFloatTokensDataMain().getUnlocked()).movePointLeft(ZanoWalletService.getFloatTokensDataMain().getAsset_info().getDecimal_point());
-            BigDecimal zanoBalanceWallet = new BigDecimal(ZanoWalletService.getZanoDataMain().getUnlocked()).movePointLeft(ZanoWalletService.getZanoDataMain().getAsset_info().getDecimal_point());
+            BigDecimal fusdBalanceWallet = BigDecimal.ZERO;
+            if (ZanoWalletService.getFloatTokensDataMain() != null) {
+                fusdBalanceWallet = new BigDecimal(ZanoWalletService.getFloatTokensDataMain().getUnlocked()).movePointLeft(4);
+            }
+
+            BigDecimal zanoBalanceWallet = BigDecimal.ZERO;
+            if (ZanoWalletService.getZanoDataMain() != null) {
+                zanoBalanceWallet = new BigDecimal(ZanoWalletService.getZanoDataMain().getUnlocked()).movePointLeft(12);
+            }
+
 
             botDashNew.setMainWalletFusdBalance(fusdBalanceWallet);
             botDashNew.setMainWalletZanoBalance(zanoBalanceWallet);
