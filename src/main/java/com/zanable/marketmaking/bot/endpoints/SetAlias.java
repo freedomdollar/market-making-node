@@ -3,6 +3,7 @@ package com.zanable.marketmaking.bot.endpoints;
 import com.google.gson.Gson;
 import com.zanable.marketmaking.bot.beans.SetAliasReq;
 import com.zanable.marketmaking.bot.beans.api.ApiResponseBean;
+import com.zanable.marketmaking.bot.beans.zano.AliasDetails;
 import com.zanable.marketmaking.bot.exceptions.ZanoWalletException;
 import com.zanable.marketmaking.bot.services.DatabaseService;
 import com.zanable.marketmaking.bot.services.SettingsService;
@@ -23,21 +24,33 @@ public class SetAlias {
 
     @RequestMapping(value="/api/set-alias", produces="application/json", method= RequestMethod.POST)
     @ResponseBody
-    public ResponseEntity<ApiResponseBean> setAlias(HttpServletRequest request, HttpServletResponse response, @RequestBody SetAliasReq SetAliasReq) {
+    public ResponseEntity<ApiResponseBean> setAlias(HttpServletRequest request, HttpServletResponse response, @RequestBody SetAliasReq setAliasReq) {
         Gson gson = new Gson();
-        System.out.println(gson.toJson(SetAliasReq));
+        System.out.println(gson.toJson(setAliasReq));
 
         ApiResponseBean responseBean = new ApiResponseBean();
 
-        if (SetAliasReq.getAlias() == null || SetAliasReq.getAlias().length() <= 5) {
+        if (setAliasReq.getAlias() == null || setAliasReq.getAlias().length() <= 5) {
             responseBean.setMessage("Alias needs to be more than 5 characters long");
             responseBean.setStatus(400);
             return new ResponseEntity<>(responseBean, HttpStatus.BAD_REQUEST);
         }
 
         try {
+            // System.out.println("ALIAS DEBUG: " + ZanoWalletService.getAliasDetails(setAliasReq.getAlias()));
+            AliasDetails aliasDetails = ZanoWalletService.getAliasDetails(setAliasReq.getAlias());
+            if (aliasDetails != null && aliasDetails.getBaseAddress() != null) {
+                responseBean.setMessage("Alias already registered");
+                responseBean.setStatus(400);
+                return new ResponseEntity<>(responseBean, HttpStatus.BAD_REQUEST);
+            }
+        } catch (NoApiResponseException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
             if (SettingsService.getAppSettingSafe("pending_alias_tx") == null) {
-                String txId = ZanoWalletService.setAlias(SetAliasReq.getAlias().toLowerCase(), "");
+                String txId = ZanoWalletService.setAlias(setAliasReq.getAlias().toLowerCase(), "");
                 if (txId != null && !txId.isEmpty()) {
                     DatabaseService.upsertAppSetting("pending_alias_tx", txId);
                     SettingsService.updateAppSettings();

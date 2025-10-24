@@ -299,6 +299,13 @@ public class ZanoWalletService implements ApplicationService {
             // System.out.println("Block height updated: " + newBlockHeight);
             blockHeight = newBlockHeight;
 
+            if (walletAlias == null) {
+                walletAlias = getAliasByAddress(walletAddress);
+                if (walletAlias != null) {
+                    SettingsService.saveAppSetting("pending_alias_tx", null);
+                }
+            }
+
             long timeSiceLastUtxoCheck = System.currentTimeMillis() - lastUtxoProcess;
             if (timeSiceLastUtxoCheck > (5 * 60 * 1000)) {
                 try {
@@ -759,7 +766,7 @@ public class ZanoWalletService implements ApplicationService {
         if (responseBody.containsKey("result")) {
             JSONObject aliasDetailsJson = (JSONObject) ((JSONObject) responseBody.get("result")).get("alias_details");
             AliasDetails aliasDetails = new AliasDetails();
-            aliasDetails.setAlias((String) aliasDetailsJson.get("alias"));
+            aliasDetails.setAlias((String) alias);
             aliasDetails.setBaseAddress((String) aliasDetailsJson.get("address"));
             aliasDetails.setComment((String) aliasDetailsJson.get("comment"));
             aliasDetails.setTrackingKey((String) aliasDetailsJson.get("tracking_key"));

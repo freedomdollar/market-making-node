@@ -24,4 +24,10 @@ public class OtherPages {
 
         return "transfer-funds.html";
     }
+
+    @GetMapping(value="/setup-twofa", produces={"text/html"})
+    public String twoFaSetup(Model model) {
+
+        return "security-2fa.html";
+    }
 }

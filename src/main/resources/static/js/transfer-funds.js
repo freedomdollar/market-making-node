@@ -30,6 +30,7 @@
         aliasText: document.getElementById('alias-text'),
 
         commentInput: document.getElementById('comment-input'),
+        twoFaInput: document.getElementById('2fa-input'),
         btnSend: document.getElementById('btn-send'),
         btnReset: document.getElementById('btn-reset'),
         sendAlert: document.getElementById('send-alert'),
@@ -358,6 +359,7 @@
         els.amountInput.value = '';
         els.addressInput.value = '';
         els.commentInput.value = '';
+        els.twoFaInput.value = '';
         els.addressStatus.textContent = '—';
         els.rowBaseAddress.classList.add('d-none');
         els.rowPaymentId.classList.add('d-none');
@@ -375,6 +377,7 @@
         const amount = Number(els.amountInput.value);
         const addr = (els.addressInput.value || '').trim();
         const comment = els.commentInput.value || '';
+        const twoFa = els.twoFaInput.value || '';
 
         // Validation
         if (zanoBal < FEE_ZANO) {
@@ -413,7 +416,8 @@
                 comment: comment,
                 assetId: selected.assetId,
                 amount: amountStr,
-                paymentId: paymentIdToSend
+                paymentId: paymentIdToSend,
+                twoFa: twoFa
             };
             const res = await postJson('/api/wallet-send', payload);
             const msg = (res && (res.message || res.statusText)) || 'Transfer sent';

@@ -5,7 +5,10 @@ import com.zanable.marketmaking.bot.beans.*;
 import com.zanable.marketmaking.bot.beans.api.ApiResponseBean;
 import com.zanable.marketmaking.bot.beans.zano.AliasDetails;
 import com.zanable.marketmaking.bot.beans.zano.IntegratedAddress;
+import com.zanable.marketmaking.bot.enums.TwoFactorType;
+import com.zanable.marketmaking.bot.services.DatabaseService;
 import com.zanable.marketmaking.bot.services.ZanoWalletService;
+import com.zanable.marketmaking.bot.tools.GoogleAuth;
 import com.zanable.shared.beans.SendResponse;
 import com.zanable.shared.exceptions.NoApiResponseException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,9 +20,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.util.List;
 
 @Controller
 public class WalletEndpoints {
+
+    private int failedFa = 0;
+    private long blocked2FaUntil = 0;
 
     @RequestMapping(value="/api/wallet-query-address", produces="application/json", method= RequestMethod.POST)
     @ResponseBody
@@ -104,6 +112,55 @@ public class WalletEndpoints {
         ApiResponseBean responseBean = new ApiResponseBean();
 
         ZanoAddressQueryResponse zanoAddressQueryResponse = new ZanoAddressQueryResponse();
+
+        if ((System.currentTimeMillis()/1000) < blocked2FaUntil) {
+            responseBean.setMessage("Two factor authentication is temporarily blocked due to too many attempts.");
+            responseBean.setStatus(405);
+            return new ResponseEntity<>(responseBean, HttpStatus.METHOD_NOT_ALLOWED);
+        }
+
+        List<TwoFactorData> twoFaList = DatabaseService.get2FaData(null, 1);
+        if (twoFaList.isEmpty()) {
+            responseBean.setMessage("Two factor authentication not configured. Please setup two factor authentication.");
+            responseBean.setStatus(417);
+            return new ResponseEntity<>(responseBean, HttpStatus.EXPECTATION_FAILED);
+        }
+
+        if (sendRequest.getTwoFa() == null || sendRequest.getTwoFa().isEmpty()) {
+            responseBean.setMessage("You need to enter a two fa ctor authentication code to send funds");
+            responseBean.setStatus(400);
+            return new ResponseEntity<>(responseBean, HttpStatus.BAD_REQUEST);
+        }
+        boolean twoFaValid = false;
+        for (TwoFactorData twoFactorData : twoFaList) {
+            if (sendRequest.getTwoFa().startsWith("ccc") && twoFactorData.getType().equals(TwoFactorType.YUBIKEY)) {
+                if (TwoFaEndpoints.validateYubikey(sendRequest.getTwoFa(), twoFactorData.getData())) {
+                    twoFaValid = true;
+                    failedFa = 0;
+                } else {
+                    System.out.println("Yubikey validation failed");
+                }
+            } else {
+                if (sendRequest.getTwoFa().equals(GoogleAuth.getTOTPCode(twoFactorData.getData()))) {
+                    twoFaValid = true;
+                    failedFa = 0;
+                }
+            }
+        }
+        if (!twoFaValid && !sendRequest.getTwoFa().startsWith("ccc")) {
+            // Google auth is used
+            failedFa++;
+            if (failedFa > 5) {
+                blocked2FaUntil = (System.currentTimeMillis()/1000) + ((System.currentTimeMillis()/1000) % 30);
+                System.out.println("Blocking 2FA until " + new Timestamp(blocked2FaUntil).toString());
+            }
+        }
+
+        if (!twoFaValid) {
+            responseBean.setMessage("The 2FA code is wrong");
+            responseBean.setStatus(401);
+            return new ResponseEntity<>(responseBean, HttpStatus.UNAUTHORIZED);
+        }
 
         int decimals = ZanoWalletService.getAssetBalanceMap("main").get(sendRequest.getAssetId()).getAsset_info().getDecimal_point();
         System.out.println("Decimals: " + decimals);

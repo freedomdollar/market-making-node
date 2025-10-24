@@ -1,11 +1,13 @@
 package com.zanable.marketmaking.bot.services;
 
 import com.zanable.marketmaking.bot.ApplicationStartup;
+import com.zanable.marketmaking.bot.beans.TwoFactorData;
 import com.zanable.marketmaking.bot.beans.WalletTransaction;
 import com.zanable.marketmaking.bot.beans.api.ExtendedTradeChain;
 import com.zanable.marketmaking.bot.beans.market.*;
 import com.zanable.marketmaking.bot.beans.zano.*;
 import com.zanable.marketmaking.bot.enums.TradeType;
+import com.zanable.marketmaking.bot.enums.TwoFactorType;
 import com.zanable.shared.interfaces.ApplicationService;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -917,6 +919,66 @@ public class DatabaseService implements ApplicationService {
             e.printStackTrace();
         }
         return sells;
+    }
+
+    public static long insert2FA(Connection conn, TwoFactorType type, String data, long loginId) {
+
+        boolean connWasNull = false;
+
+        try {
+
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            String query = "INSERT INTO two_factor_auths (type, data, created, login_id) " +
+                    "VALUES (?,?,NOW(),?);";
+            PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, type.toString());
+            ps.setString(2, data);
+            ps.setLong(3, loginId);
+            ps.execute();
+            ResultSet keys = ps.getGeneratedKeys();
+            long id = -1;
+            if (keys.next()) {
+                id = keys.getLong(1);
+            }
+            ps.close();
+
+            if (connWasNull) {
+                conn.close();
+            }
+
+            return id;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public static List<TwoFactorData> get2FaData(Connection conn, long loginId) {
+
+        List<TwoFactorData> twoFaList = new ArrayList<>();
+        boolean connWasNull = false;
+        try {
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            PreparedStatement ps = conn.prepareStatement("SELECT * FROM two_factor_auths WHERE login_id=?");
+            ps.setLong(1, loginId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                TwoFactorData twoFactorData = new TwoFactorData(loginId, rs.getString("data"), TwoFactorType.valueOf(rs.getString("type")), rs.getTimestamp("created"));
+                twoFaList.add(twoFactorData);
+            }
+            if (!connWasNull) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return twoFaList;
     }
 
     public static void insertSimplifiedTrade(Connection conn, String firstCurrency, BigDecimal firstAmount,

@@ -22,6 +22,11 @@ public class SettingsService implements ApplicationService {
     private static HashMap<String, String> appSettings = new HashMap<>();
     private static Gson gson = new Gson();
 
+    @Getter
+    private static int yubicoClientId = 115583;
+    @Getter
+    private static String yubicoApiKey = "DApfn3yHB1S3d3aXwlbaaGAuCeU";
+
     @Override
     public void init() {
 

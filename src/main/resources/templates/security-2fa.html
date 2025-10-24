@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Security & 2FA • fUSD Market Maker</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --main-bg-color: #0c0c3a; --font-main-color: #fff; --font-dimmed-color: #8d95ae; --delimiter-color: hsla(0, 0%, 100%, .1);
+      --window-bg-color: #0f2055; --dropdown-bg-color: #11316b; --dropdown-bg-hover: #1d3b72; --profile-widget-avatar: #11316b;
+      --window-border-color: hsla(0, 0%, 100%, .3); --bordered-input-bg: hsla(0, 0%, 100%, .1); --row-header-bg: #154d91;
+      --button-bordered-hover: hsla(0, 0%, 100%, .1); --alert-bg: #233467; --switch-bg-color: #0f2055; --switch-bg-hover: #273666;
+      --dimmed-btn-bg: hsla(0, 0%, 100%, .1); --dimmed-btn-hover: hsla(0, 0%, 100%, .3); --font-faded-color: hsla(0, 0%, 100%, .5);
+      --slider-bg-color: #1d3b72; --blur-color: hsla(0, 0%, 100%, .05); --icon-bg-color: #0f1f54; --swap-btn-bg: rgba(31, 143, 235, .1);
+      --advices-bg-color: hsla(0, 0%, 100%, .1); --messenger-top-bg: #0f2055; --messenger-bottom-bg: #273666; --messenger-bg: #0f2055;
+      --messenger-border: hsla(0, 0%, 100%, .1); --message-bg: hsla(0, 0%, 100%, .1); --custom-message-bg: transparent;
+      --trade-table-tooltip: #1d3b72; --dex-offer-notification: #0f2055; --dex-panel-bg: #0f2055; --dex-panel-tooltip: #273666;
+      --dex-buy-sell-border: #ffffff1a; --dex-input-currency: #39497c; --footer-selected-link: #ffffffcc; --table-th-color: #ffffffb2;
+      --table-thead-bg: #24244e; --table-tbody-bg: #101040; --admin-table-border-color: #596f98;
+      --buy-color: #16d1d6; --sell-color: #ff6767; --link-color: #1f8feb; --link-hover-color: #4ca5ef;
+      --bs-primary-rgb: 31, 143, 235; --bs-primary: var(--link-color);
+      --sidebar-width: 260px; --sidebar-collapsed-width: 76px; --topbar-height: 64px;
+    }
+    *, *::before, *::after { padding: 0; margin: 0; border: none; outline: none; box-sizing: border-box; transition: all .3s; background-clip: border-box; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+    body { background-color: var(--main-bg-color); color: #FFF; font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.6; padding-top: var(--topbar-height) !important; }
+    .container, .container-fluid { max-width: 1800px; padding: 40px 20px 80px; }
+    @media screen and (min-width: 1200px) { .container, .container-fluid { padding: 40px 60px 80px; } }
+    p { color: var(--font-main-color); margin-bottom: 0.5rem; } a { color: var(--link-color); text-decoration: none; } a:hover { color: var(--link-hover-color); text-decoration: underline; }
+    h1, h2, h3, h4, h5, h6 { color: var(--font-main-color); font-weight: 600; margin-top: 0; margin-bottom: 1rem; }
+    h1 { font-size: 2.0rem; }
+    .text-muted { color: var(--font-dimmed-color) !important; }
+    .card { color: #FFF; background-color: var(--window-bg-color); border: 1px solid var(--window-border-color); border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); position: relative; }
+    .card-header { background-color: transparent; border-bottom: 1px solid var(--delimiter-color); color: var(--font-main-color); font-weight: 600; font-size: 1.1em; padding: 1rem 1.5rem; border-top-left-radius: 15px; border-top-right-radius: 15px; }
+    .card-body { padding: 1.5rem; } .card-footer { background-color: transparent; border-top: 1px solid var(--delimiter-color); padding: 1rem 1.5rem; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; }
+    .badge { padding: 0.3em 0.6em; font-size: 0.8em; font-weight: 700; border-radius: 5px; --bs-badge-bg: var(--dimmed-btn-bg); color: var(--font-main-color); border: 1px solid transparent; }
+    .badge.bg-primary { color: var(--link-color); border-color: var(--link-color); background-color: transparent !important; }
+    .badge.bg-secondary { color: var(--font-dimmed-color); border-color: var(--font-dimmed-color); background-color: transparent !important; }
+    .form-control, .form-select { background-color: var(--bordered-input-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color); }
+    .form-control:disabled { opacity: .85; }
+    .input-group-text { border: 1px solid hsla(0, 0%, 100%, .3); color: #ffffff; background-color: #273766; }
+    .content { margin-left: var(--sidebar-width); }
+    @media (max-width: 991.98px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } .content { margin-left: 0; } }
+    body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed-width); }
+    body.sidebar-collapsed .content { margin-left: var(--sidebar-collapsed-width); }
+    body.sidebar-collapsed .sidebar .label { display: none; }
+    body.sidebar-collapsed .sidebar .nav-link { justify-content: center; }
+    #sidebar-backdrop { position: fixed; inset: var(--topbar-height) 0 0 0; background: rgba(0,0,0,.5); z-index: 1015; display: none; }
+    #sidebar-backdrop.show { display: block; }
+
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--topbar-height);
+      display: flex; align-items: center;
+      background: var(--messenger-top-bg);
+      border-bottom: 1px solid var(--window-border-color);
+      z-index: 1030;
+      padding: 0 .75rem;
+    }
+    .topbar .navbar-brand { color: #fff; font-weight: 700; display: flex; align-items: center; gap: .5rem; text-decoration: none; }
+    .topbar .btn-outline-secondary { color: var(--font-main-color); border-color: var(--window-border-color); }
+    .topbar .btn-outline-secondary:hover { background: var(--dimmed-btn-bg); }
+
+    .sidebar {
+      position: fixed; top: var(--topbar-height); left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--window-bg-color);
+      border-right: 1px solid var(--window-border-color);
+      padding: .75rem .5rem;
+      overflow-y: auto; z-index: 1020;
+      transform: translateX(0); transition: transform .25s ease, width .25s ease;
+    }
+    .sidebar .nav-section-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--font-dimmed-color); padding: .5rem .75rem; margin-top: .25rem; }
+    .sidebar .nav-link { display: flex; align-items: center; gap: .75rem; color: var(--font-main-color); padding: .6rem .75rem; border-radius: .5rem; font-weight: 600; }
+    .sidebar .nav-link:hover { background: var(--dropdown-bg-hover); text-decoration: none; }
+    .sidebar .nav-link.active { background: var(--dimmed-btn-bg); border: 1px solid var(--window-border-color); }
+    .sidebar .nav-link .bi { font-size: 1.1rem; }
+
+    .card .card-overlay {
+      z-index: 1000; font-size: 32px; color: #FFF !important;
+      text-shadow: 3px 3px 5px #000; position: absolute; inset: 0; display: none;
+      align-items: center; justify-content: center; background: rgba(0,0,0,.15); border-radius: 15px; font-weight: 600;
+      text-align: center; padding: .75rem;
+    }
+    .card.is-disabled .card-overlay { display: flex; }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    #ga-qrcode { background-color: #FFF; padding: 8px; display: inline-block; border-radius: 6px; }
+    .table-responsive th {background-color: #0f2055; color: #FFF;}
+    .table-responsive td {background-color: #0f2055; color: #DDD;}
+    .input-group input::placeholder {color: #AAA;}
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<nav class="topbar">
+  <button class="btn btn-outline-secondary me-2" id="btn-toggle-sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">
+    <i class="bi bi-list"></i>
+  </button>
+  <a class="navbar-brand me-3" href="/">
+    <i class="bi bi-hexagon"></i> fUSD Market Maker
+  </a>
+  <div class="ms-auto"></div>
+  <div class="dropdown">
+    <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="bi bi-person-circle"></i><span class="d-none d-md-inline">Admin</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+      <li><h6 class="dropdown-header">Account</h6></li>
+      <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Sidebar + mobile backdrop -->
+<div id="sidebar-backdrop" aria-hidden="true"></div>
+<aside class="sidebar" id="sidebar" aria-label="Sidebar">
+  <div class="nav-section-title">Main</div>
+  <nav class="nav flex-column">
+    <a class="nav-link" href="/"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a>
+    <a class="nav-link" href="/settings"><i class="bi bi-gear"></i><span class="label">Settings</span></a>
+    <a class="nav-link" href="/transactions"><i class="bi bi-receipt"></i><span class="label">Transactions</span></a>
+    <a class="nav-link" href="/transfer-funds"><i class="bi bi-arrow-left-right"></i><span class="label">Transfer funds</span></a>
+    <a class="nav-link active" href="/setup-twofa"><i class="bi bi-shield-lock"></i><span class="label">Security & 2FA</span></a>
+  </nav>
+</aside>
+
+<!-- Main content -->
+<main class="content">
+  <div class="container-fluid">
+    <h1 class="mb-3"><i class="bi bi-shield-lock me-2"></i>Security &amp; Two‑Factor Authentication</h1>
+    <div class="alert" role="alert" style="background-color: var(--alert-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color);">
+      <i class="bi bi-info-circle me-2"></i>
+      2FA is used to authorize sensitive <strong>wallet operations</strong>.
+    </div>
+
+    <!-- Global alert -->
+    <div id="global-alert" class="alert d-none" role="alert" style="background-color: var(--alert-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color);"></div>
+
+    <div class="row g-4">
+      <!-- Registered methods -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Registered 2FA Methods</span>
+            <div class="d-flex align-items-center gap-2">
+              <small id="list-last-updated" class="text-muted">Last updated: —</small>
+              <button id="btn-refresh-list" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead>
+                  <tr><th style="width: 160px;">Type</th><th>Data</th><th style="width: 240px;">Added</th></tr>
+                </thead>
+                <tbody id="twofa-tbody">
+                  <tr><td class="text-muted" colspan="3">No 2FA configured yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <small class="text-muted">You can register multiple methods.</small>
+            <small class="text-muted">Removal coming soon.</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Google Authenticator setup -->
+      <div class="col-12 col-xl-7">
+        <div class="card" id="ga-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-google me-2"></i>Add Google Authenticator (TOTP)</span>
+            <span id="ga-status" class="badge bg-secondary">Idle</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <label class="form-label">1) Generate secret</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-key"></i></span>
+                  <input id="ga-secret" type="text" class="form-control mono" placeholder="Click “Generate secret”" readonly />
+                  <button class="btn btn-outline-secondary" type="button" id="btn-copy-secret" disabled data-bs-toggle="tooltip" data-bs-title="Copy">
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                </div>
+                <div class="mt-2 d-flex gap-2">
+                  <button class="btn btn-sm btn-primary" id="btn-generate-secret"><i class="bi bi-gear"></i> Generate secret</button>
+                  <button class="btn btn-sm btn-outline-secondary" id="btn-reset-ga">Reset</button>
+                </div>
+                <small class="text-muted d-block mt-2">Keep this secret safe. Anyone with it can generate valid codes.</small>
+              </div>
+
+              <div class="col-lg-6">
+                <label class="form-label">2) Scan QR in Google Authenticator</label>
+                <div id="ga-qrcode" class="d-inline-block"></div>
+                <small class="text-muted d-block mt-2">If your app asks, issuer is <span class="mono">fUSD Market Maker</span>.</small>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Manual setup (optional)</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                  <input id="ga-otpauth" type="text" class="form-control mono" placeholder="otpauth://… (will appear after Generate)" readonly />
+                  <button class="btn btn-outline-secondary" type="button" id="btn-copy-otpauth" disabled data-bs-toggle="tooltip" data-bs-title="Copy">
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                </div>
+                <small class="text-muted">URI includes account label “Wallet Operations” and issuer “fUSD Market Maker”.</small>
+              </div>
+
+              <div class="col-12">
+                <label for="ga-code" class="form-label">3) Enter 6‑digit code from your app</label>
+                <div class="input-group" style="max-width: 420px;">
+                  <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
+                  <input id="ga-code" type="text" inputmode="numeric" maxlength="6" pattern="\\d{6}" class="form-control" placeholder="000000" autocomplete="one-time-code" />
+                  <button id="btn-register-ga" class="btn btn-primary" disabled>
+                    <span class="default"><i class="bi bi-plus-circle"></i> Register</span>
+                    <span class="working d-none"><span class="spinner-border spinner-border-sm me-1"></span>Registering…</span>
+                  </button>
+                </div>
+                <small id="ga-help" class="text-muted d-block mt-2">Codes rotate every 30 seconds; use any currently valid one.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- YubiKey setup -->
+      <div class="col-12 col-xl-5">
+        <div class="card" id="yk-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-usb-symbol me-2"></i>Add YubiKey</span>
+            <span id="yk-status" class="badge bg-secondary">Idle</span>
+          </div>
+          <div class="card-body">
+            <div class="mb-2">
+              <label for="yk-code" class="form-label">Tap your YubiKey with the field focused</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-usb-drive"></i></span>
+                <input id="yk-code" type="text" class="form-control mono" placeholder="Focus & tap YubiKey to paste OTP here…" autocomplete="off" />
+                <button id="btn-register-yk" class="btn btn-primary" disabled>
+                  <span class="default"><i class="bi bi-plus-circle"></i> Register</span>
+                  <span class="working d-none"><span class="spinner-border spinner-border-sm me-1"></span>Registering…</span>
+                </button>
+              </div>
+              <small class="text-muted d-block mt-2">Example: <span class="mono">cccccclhvivgbfenhlrtnvitfunvtbtfdvttrfbbuced</span></small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- jQuery / Bootstrap / QR -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/js/qrcode.js"></script>
+
+<script>
+  (function () {
+    // Sidebar toggle like other pages
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const toggleBtn = document.getElementById('btn-toggle-sidebar');
+    const isMobile = () => window.innerWidth < 992;
+    toggleBtn?.addEventListener('click', function () {
+      if (isMobile()) {
+        const showing = sidebar.classList.toggle('show');
+        toggleBtn.setAttribute('aria-expanded', showing ? 'true' : 'false');
+        backdrop.classList.toggle('show', showing);
+      } else {
+        document.body.classList.toggle('sidebar-collapsed');
+      }
+    });
+    backdrop.addEventListener('click', () => {
+      sidebar.classList.remove('show'); backdrop.classList.remove('show'); toggleBtn.setAttribute('aria-expanded', 'false');
+    });
+    window.addEventListener('resize', () => {
+      if (!isMobile()) { sidebar.classList.remove('show'); backdrop.classList.remove('show'); toggleBtn.setAttribute('aria-expanded', 'false'); }
+    });
+    // Active link highlight
+    const path = (location.pathname.replace(/\/+$/, '') || '/').toLowerCase();
+    document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+      const href = (link.getAttribute('href') || '').toLowerCase();
+      const isRoot = path === '/' && href === '/';
+      const isMatch = href !== '/' && path.startsWith(href);
+      link.classList.toggle('active', isRoot || isMatch);
+      if (link.classList.contains('active')) link.setAttribute('aria-current', 'page');
+    });
+  })();
+
+  // Helpers
+  function showAlert(text, type = 'info') {
+    const el = document.getElementById('global-alert');
+    el.className = 'alert alert-' + (type === 'success' ? 'success' : type === 'danger' ? 'danger' : 'info');
+    el.style.backgroundColor = 'var(--alert-bg)';
+    el.style.border = '1px solid var(--window-border-color)';
+    el.textContent = text;
+    el.classList.remove('d-none');
+    setTimeout(() => el.classList.add('d-none'), 6000);
+  }
+
+  function setBadge(el, text, variant) {
+    el.textContent = text;
+    el.className = 'badge ' + (variant === 'ok' ? 'bg-success' : variant === 'warn' ? 'bg-primary' : 'bg-secondary');
+  }
+
+  function isoNow() {
+    const d = new Date(); return d.toISOString().slice(0,19).replace('T',' ') + 'Z';
+  }
+
+  // Registered methods list
+  async function loadRegistered() {
+    const last = document.getElementById('list-last-updated');
+    last.textContent = 'Loading…';
+    try {
+      const res = await fetch('/api/get-2fas', { method: 'GET' });
+      const data = await res.json();
+      const tbody = document.getElementById('twofa-tbody');
+      tbody.innerHTML = '';
+      if (!data || !Array.isArray(data.payload) || data.payload.length === 0) {
+        tbody.innerHTML = '<tr><td class="text-muted" colspan="3">No 2FA configured yet.</td></tr>';
+      } else {
+        data.payload.forEach(row => {
+          const tr = document.createElement('tr');
+          const type = document.createElement('td'); type.textContent = row.type || '—';
+          const info = document.createElement('td'); info.innerHTML = '<span class="mono">' + (row.data || '—') + '</span>';
+          const ts = document.createElement('td'); ts.textContent = row.timestamp ? new Date(row.timestamp).toLocaleString() : '—';
+          tr.appendChild(type); tr.appendChild(info); tr.appendChild(ts);
+          tbody.appendChild(tr);
+        });
+      }
+      last.textContent = 'Last updated: ' + new Date().toLocaleString();
+    } catch (e) {
+      last.textContent = 'Last updated: ' + new Date().toLocaleString();
+      showAlert('Failed to load registered 2FA: ' + (e?.message || e), 'danger');
+    }
+  }
+
+  // Google Auth setup
+  let gaSecret = null;
+  let gaQR = null;
+  function resetGA() {
+    gaSecret = null;
+    document.getElementById('ga-secret').value = '';
+    document.getElementById('ga-otpauth').value = '';
+    document.getElementById('ga-code').value = '';
+    document.getElementById('btn-copy-secret').disabled = true;
+    document.getElementById('btn-copy-otpauth').disabled = true;
+    document.getElementById('btn-register-ga').disabled = true;
+    document.getElementById('ga-help').textContent = 'Codes rotate every 30 seconds; use any currently valid one.';
+    document.getElementById('ga-qrcode').innerHTML = '';
+    if (gaQR && gaQR.clear) try { gaQR.clear(); } catch (_) {}
+    setBadge(document.getElementById('ga-status'), 'Idle', 'idle');
+  }
+
+  function buildOtpAuthUri(secret) {
+    const issuer = encodeURIComponent('fUSD Market Maker');
+    const label = encodeURIComponent('Wallet Operations');
+    const params = new URLSearchParams({ secret: secret, issuer: 'fUSD Market Maker', period: 30, digits: 6, algorithm: 'SHA1' });
+    return `otpauth://totp/${label}?${params.toString()}`;
+  }
+
+  async function generateGASecret() {
+    setBadge(document.getElementById('ga-status'), 'Requesting…', 'warn');
+    try {
+      const res = await fetch('/api/get-pending-google-auth', { method: 'GET' });
+      const json = await res.json();
+      if (!json || json.status !== 200 || !json.payload) {
+        throw new Error(json?.message || 'Unexpected response');
+      }
+      gaSecret = (json.payload + '').trim();
+      document.getElementById('ga-secret').value = gaSecret;
+      document.getElementById('btn-copy-secret').disabled = false;
+
+      // Build otpauth URI + QR
+      const uri = buildOtpAuthUri(gaSecret);
+      document.getElementById('ga-otpauth').value = uri;
+      document.getElementById('btn-copy-otpauth').disabled = false;
+
+      // Render QR (uses /js/qrcode.js as on your other page)
+      const qrEl = document.getElementById('ga-qrcode');
+      qrEl.innerHTML = '';
+      gaQR = new QRCode(qrEl, { text: uri, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+      setBadge(document.getElementById('ga-status'), 'Secret ready', 'ok');
+    } catch (e) {
+      setBadge(document.getElementById('ga-status'), 'Error', 'idle');
+      showAlert('Failed to generate Google Auth secret: ' + (e?.message || e), 'danger');
+    }
+  }
+
+  async function registerGA() {
+    const btn = document.getElementById('btn-register-ga');
+    const code = (document.getElementById('ga-code').value || '').trim();
+    if (!gaSecret) { showAlert('Generate a secret first.', 'danger'); return; }
+    if (!/^[0-9]{6}$/.test(code)) { showAlert('Enter a valid 6‑digit code.', 'danger'); return; }
+
+    btn.disabled = true;
+    btn.querySelector('.default').classList.add('d-none');
+    btn.querySelector('.working').classList.remove('d-none');
+    setBadge(document.getElementById('ga-status'), 'Registering…', 'warn');
+
+    // Some backends use "GOOGLEAUTH"; your example also shows a "GOOGLEAUTAH" variant.
+    async function tryRegister(typeValue) {
+      const res = await fetch('/api/register-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code, type: typeValue })
+      });
+      return res.json();
+    }
+
+    try {
+      let result = await tryRegister('GOOGLEAUTH');
+      if (!result || result.status !== 200) {
+        // Compatibility fallback for typo’d constant in some builds.
+        result = await tryRegister('GOOGLEAUTAH');
+      }
+      if (!result || result.status !== 200) {
+        throw new Error(result?.message || 'Registration failed');
+      }
+      setBadge(document.getElementById('ga-status'), 'Registered', 'ok');
+      showAlert('Google Authenticator added.', 'success');
+      resetGA();
+      await loadRegistered();
+    } catch (e) {
+      setBadge(document.getElementById('ga-status'), 'Error', 'idle');
+      showAlert('Failed to register Google Authenticator: ' + (e?.message || e), 'danger');
+    } finally {
+      btn.querySelector('.working').classList.add('d-none');
+      btn.querySelector('.default').classList.remove('d-none');
+      btn.disabled = false;
+    }
+  }
+
+  // YubiKey
+  function ykValidate(s) { return typeof s === 'string' && s.length >= 32; }
+  async function registerYK() {
+    const btn = document.getElementById('btn-register-yk');
+    const code = (document.getElementById('yk-code').value || '').trim();
+    if (!ykValidate(code)) { showAlert('Tap your YubiKey to fill a full OTP first.', 'danger'); return; }
+    btn.disabled = true;
+    btn.querySelector('.default').classList.add('d-none');
+    btn.querySelector('.working').classList.remove('d-none');
+    setBadge(document.getElementById('yk-status'), 'Registering…', 'warn');
+    try {
+      const res = await fetch('/api/register-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code, type: 'YUBIKEY' })
+      });
+      const json = await res.json();
+      if (!json || json.status !== 200) throw new Error(json?.message || 'Registration failed');
+      setBadge(document.getElementById('yk-status'), 'Registered', 'ok');
+      showAlert('YubiKey added.', 'success');
+      document.getElementById('yk-code').value = '';
+      await loadRegistered();
+    } catch (e) {
+      setBadge(document.getElementById('yk-status'), 'Error', 'idle');
+      showAlert('Failed to register YubiKey: ' + (e?.message || e), 'danger');
+    } finally {
+      btn.querySelector('.working').classList.add('d-none');
+      btn.querySelector('.default').classList.remove('d-none');
+      btn.disabled = false;
+    }
+  }
+
+  // Wire up controls
+  document.getElementById('btn-refresh-list').addEventListener('click', loadRegistered);
+  document.getElementById('btn-generate-secret').addEventListener('click', generateGASecret);
+  document.getElementById('btn-reset-ga').addEventListener('click', resetGA);
+  document.getElementById('btn-register-ga').addEventListener('click', registerGA);
+  document.getElementById('btn-register-yk').addEventListener('click', registerYK);
+  document.getElementById('ga-code').addEventListener('input', (e) => {
+    const ok = /^[0-9]{6}$/.test(e.target.value);
+    document.getElementById('btn-register-ga').disabled = !ok;
+    document.getElementById('ga-help').textContent = ok ? 'Looks good. Click Register.' : 'Codes rotate every 30 seconds; use any currently valid one.';
+  });
+  document.getElementById('yk-code').addEventListener('input', (e) => {
+    document.getElementById('btn-register-yk').disabled = !ykValidate(e.target.value);
+  });
+
+  // Copy buttons
+  document.getElementById('btn-copy-secret').addEventListener('click', async () => {
+    const v = document.getElementById('ga-secret').value; if (!v) return;
+    await navigator.clipboard.writeText(v); showAlert('Secret copied to clipboard.', 'info');
+  });
+  document.getElementById('btn-copy-otpauth').addEventListener('click', async () => {
+    const v = document.getElementById('ga-otpauth').value; if (!v) return;
+    await navigator.clipboard.writeText(v); showAlert('otpauth:// URI copied to clipboard.', 'info');
+  });
+
+  // Init
+  resetGA();
+  loadRegistered();
+  // Focus the YubiKey field for convenience
+  setTimeout(() => document.getElementById('yk-code').focus(), 200);
+</script>
+
+</body>
+</html>

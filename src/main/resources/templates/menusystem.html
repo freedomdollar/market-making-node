@@ -154,6 +154,10 @@
         .sidebar::-webkit-scrollbar-thumb { background-color: #a0adc4; border-radius: 3px; }
         .sidebar::-webkit-scrollbar-track { background: hsla(0, 0%, 100%, .05); }
     </style>
+    <style>
+        .address-group .input-group-text img { display:inline-block; width:16px; height:16px; }
+        input.address { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    </style>
 </head>
 <body>
 
@@ -194,6 +198,7 @@
         <a class="nav-link" href="/transfer-funds">
             <i class="bi bi-arrow-left-right"></i><span class="label">Transfer funds</span>
         </a>
+        <a class="nav-link active" href="/setup-twofa"><i class="bi bi-shield-lock"></i><span class="label">Security & 2FA</span></a>
     </nav>
 </aside>
 
@@ -301,9 +306,23 @@
                     <div class="card-header">Wallet Status</div>
                     <div class="card-body">
                         <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-                            <p class="mb-0">
-                                <strong>Wallet deposit address:</strong> <span id="wallet-address">Loading...</span>
-                            </p>
+                            <div class="col-12">
+                                <label class="form-label form-label-sm mb-1">Wallet deposit address</label>
+                                <div class="input-group input-group-sm address-group" style="max-width: 640px;">
+                                <span class="input-group-text bg-transparent border-secondary" id="wallet-address-logo" title="ZANO">
+                                  <!-- Small inline SVG “Z” monogram as a default logo; swap src for your official asset anytime -->
+                                  <img alt="ZANO" width="16" height="16"
+                                       src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%2321d4fd'/%3E%3Cstop offset='1' stop-color='%231f8feb'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='url(%23g)'/%3E%3Ctext x='32' y='41' font-family='Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3EZ%3C/text%3E%3C/svg%3E">
+                                </span>
+                                    <input type="text" id="wallet-address-input" class="form-control address"
+                                           value="Loading..." readonly aria-label="Wallet deposit address">
+                                    <button class="btn btn-outline-secondary" type="button" id="btn-copy-address"
+                                            data-bs-toggle="tooltip" data-bs-title="Copy to clipboard">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                <small id="address-help" class="text-muted d-block mt-1"></small>
+                            </div>
                             <div id="qrcode" style="padding: 5px; background-color: #FFF;"></div>
                             <p class="mb-0">
                                 <strong>Alias set:</strong> <span id="wallet-alias">n/a</span>
@@ -412,7 +431,7 @@
                             <button type="button" id="btn-start-bot" class="btn btn-primary" disabled>
                                 <i class="bi bi-play-fill"></i> Start bot
                             </button>
-                            <button type="button" id="btn-stop-bot" class="btn btn-outline-secondary">
+                            <button type="button" id="btn-stop-bot" class="btn btn-outline-danger">
                                 <i class="bi bi-stop-fill"></i> Stop bot
                             </button>
                         </div>
@@ -465,7 +484,7 @@
 
                     <div class="card-footer d-flex justify-content-between">
                         <small id="rows-count" class="text-muted">0 rows</small>
-                        <small class="text-muted">Source: <code>/api/extended-trade-data</code></small>
+                        <small class="text-muted"><code></code></small>
                     </div>
                 </div>
             </div>
@@ -516,7 +535,7 @@
 
                     <div class="card-footer d-flex justify-content-between">
                         <small id="rows-count-buy" class="text-muted">0 rows</small>
-                        <small class="text-muted">Source: <code>/api/extended-trade-data</code></small>
+                        <small class="text-muted"><code></code></small>
                     </div>
                 </div>
             </div>

@@ -170,6 +170,7 @@
         <a class="nav-link" href="/transactions"><i class="bi bi-receipt"></i><span class="label">Transactions</span></a>
         <!-- New menu item -->
         <a class="nav-link active" href="/transfer-funds"><i class="bi bi-arrow-left-right"></i><span class="label">Transfer funds</span></a>
+        <a class="nav-link active" href="/setup-twofa"><i class="bi bi-shield-lock"></i><span class="label">Security & 2FA</span></a>
     </nav>
 </aside>
 
@@ -272,12 +273,21 @@
 
         <!-- Comment -->
         <div class="card">
-            <div class="card-header">Comment (encrypted & visible to receiver)</div>
+            <div class="card-header">Message (encrypted & visible to receiver)</div>
             <div class="card-body">
                 <textarea id="comment-input" class="form-control" rows="3" maxlength="200" placeholder="Optional message to the recipient…"></textarea>
                 <div class="mt-2 d-flex justify-content-between">
                     <small class="text-muted">Up to 200 characters.</small>
                     <small class="text-muted">Will be encrypted on-chain for the recipient.</small>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">2FA authentication</div>
+            <div class="card-body">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                    <input id="2fa-input" type="text" class="form-control" />
                 </div>
             </div>
         </div>

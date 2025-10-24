@@ -71,6 +71,19 @@
 
     // ---- functions ----
 
+    function toIsoLocal(dLike){
+        const d = (dLike instanceof Date) ? dLike : new Date(dLike);
+        if (isNaN(d.getTime())) return "—";
+        const pad = (n) => String(n).padStart(2, '0');
+        const y = d.getFullYear(), m = pad(d.getMonth()+1), day = pad(d.getDate());
+        const h = pad(d.getHours()), min = pad(d.getMinutes()), s = pad(d.getSeconds());
+        const off = -d.getTimezoneOffset(); // minutes; positive = east of UTC
+        const sign = off >= 0 ? "+" : "-";
+        const oh = pad(Math.floor(Math.abs(off) / 60));
+        const om = pad(Math.abs(off) % 60);
+        return `${y}-${m}-${day} ${h}:${min}:${s}`;
+    }
+
     function load() {
         if (state.isLoading) return;
         state.isLoading = true;
@@ -100,7 +113,7 @@
             renderMeta();
 
             const now = new Date();
-            setStatus(`Updated ${now.toLocaleString()}`);
+            setStatus(`Updated ${toIsoLocal(now)}`);
         }).fail((xhr) => {
             showAlert(`Failed to load transactions (HTTP ${xhr?.status || 'error'}).`);
             setStatus('Error');
@@ -164,7 +177,7 @@
 
         return `
       <tr>
-          <td>${ts ? ts.toLocaleString() : '—'}</td>
+          <td>${ts ? toIsoLocal(ts) : '—'}</td>
           <td>${dirBadge}</td>
           <td class="${amtClass}">${sign}${amountStr} ${escapeHtml(ticker || '')}</td>
           <td>${asset ? escapeHtml(asset) : '—'}</td>
@@ -177,7 +190,6 @@
               </button>` : '—'}
           </td>
           <td>${isFiniteInt(confirmations) ? Number(confirmations).toLocaleString() : '—'}</td>
-          <td>${(t.swapId ?? '') !== '' ? escapeHtml(String(t.swapId)) : '—'}</td>
       </tr>
     `;
     }

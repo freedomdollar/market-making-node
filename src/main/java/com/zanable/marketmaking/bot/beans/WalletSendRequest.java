@@ -11,4 +11,5 @@ public class WalletSendRequest {
     private String assetId;
     private String comment;
     private String paymentId;
+    private String twoFa;
 }

@@ -4,26 +4,33 @@
 /************* App Status helpers *************/
 let mexcKeyState = null; // 'ok' | 'missing' | 'invalid' | null
 
+function toIsoLocal(dLike){
+    const d = (dLike instanceof Date) ? dLike : new Date(dLike);
+    if (isNaN(d.getTime())) return "—";
+    const pad = (n) => String(n).padStart(2, '0');
+    const y = d.getFullYear(), m = pad(d.getMonth()+1), day = pad(d.getDate());
+    const h = pad(d.getHours()), min = pad(d.getMinutes()), s = pad(d.getSeconds());
+    const off = -d.getTimezoneOffset(); // minutes; positive = east of UTC
+    const sign = off >= 0 ? "+" : "-";
+    const oh = pad(Math.floor(Math.abs(off) / 60));
+    const om = pad(Math.abs(off) % 60);
+    return `${y}-${m}-${day} ${h}:${min}:${s}`;
+}
+
 function fmtNumber(n){ if(n===null||n===undefined||isNaN(n)) return "—"; try{ return Number(n).toLocaleString(); }catch{ return String(n);} }
 function fmtFloat(n, max=8, min=0){ const x=Number(n); if(!isFinite(x)) return "—"; return x.toLocaleString(undefined,{maximumFractionDigits:max, minimumFractionDigits:min}); }
 // Per your spec: percent = max_net_seen_height / height
 function computePercentBySpec(height, maxSeen){ const h=Number(height)||0, m=Number(maxSeen)||0; if(h<=0) return 0; return (h/m)*100; }
 function toBigIntVal(v){ try{ if(typeof v==="bigint") return v; if(typeof v==="number") return BigInt(Math.trunc(v)); if(typeof v==="string") return BigInt(v.trim()); }catch(_){} return 0n; }
 function fmtAtomic(atomic, decimals){ try{ const d=Math.max(0, Number(decimals)||0); let v=toBigIntVal(atomic); const neg=v<0n; if(neg) v=-v; const pow=10n**BigInt(d); const i=v/pow, f=v%pow; let frac=f.toString().padStart(d,"0").replace(/0+$/,""); return (neg?"-":"")+i.toString()+(frac?("."+frac):""); }catch(_){ const d=Math.max(0, Number(decimals)||0); const num=Number(atomic)/Math.pow(10,d); return isFinite(num)? num.toLocaleString(undefined,{maximumFractionDigits:d}) : "—"; } }
-function updateSyncTimestamp(){ $("#last-updated").text("Last updated: "+ new Date().toLocaleString()); }
-function updateTradesTimestamp(){ $("#trades-last-updated").text("Last updated: "+ new Date().toLocaleString()); }
+function updateSyncTimestamp(){ $("#last-updated").text("Last updated: " + toIsoLocal(new Date())); }
+function updateTradesTimestamp(){ $("#trades-last-updated").text("Last updated: " + toIsoLocal(new Date())); }
+function updateTimestamp(){
+    document.getElementById("last-updated-buy").textContent = "Last updated: " + toIsoLocal(new Date());
+}
 function fmtTime(ts) {
     if (!ts) return "—";
-    try {
-        return new Date(ts).toLocaleString();
-    } catch {
-        return "—";
-    }
-}
-
-function updateTimestamp() {
-    const now = new Date();
-    document.getElementById("last-updated-buy").textContent = "Last updated: " + now.toLocaleString();
+    return toIsoLocal(ts);
 }
 
 function setCardEnabled(cardId, enabled, message){
@@ -36,7 +43,7 @@ function setCardEnabled(cardId, enabled, message){
 /***********************
  * Service readiness
  ***********************/
-const serviceState = { appStarted:false, daemon:false, wallet:false, dex:false, cex:false, dexTradingActive:false };
+const serviceState = { appStarted:false, daemon:false, wallet:false, dex:false, cex:false, dexTradingActive:false, alias:false };
 let daemonModal;
 
 function applyServiceState(){
@@ -77,6 +84,17 @@ function applyServiceState(){
         $("#alias-save-btn").attr("disabled", "disabled");
         $("#alias-alert").html("Alias is pending confirmations.");
     }
+    if (serviceState.alias) {
+        $("#alias-input").attr("disabled", "disabled");
+        $("#alias-save-btn").attr("disabled", "disabled");
+        $("#alias-input").hide();
+        $("#alias-save-btn").hide();
+    } else {
+        $("#alias-input").removeAttribute("disabled", "disabled");
+        $("#alias-save-btn").removeAttribute("disabled", "disabled");
+        $("#alias-input").show();
+        $("#alias-save-btn").show();
+    }
 
     if (serviceState.tradingOpen) {
         $("#btn-start-bot").prop("disabled", true);
@@ -106,10 +124,12 @@ function refreshAppStatus(){
         applyServiceState();
     }).fail(function(){
         // If status endpoint fails, consider all inactive to avoid spamming other endpoints.
-        serviceState.daemon = serviceState.wallet = serviceState.dex = serviceState.cex = serviceState.pendingAlias = serviceState.app = false;
+        serviceState.daemon = serviceState.wallet = serviceState.dex = serviceState.cex = serviceState.pendingAlias = serviceState.app = serviceState.alias = false;
         applyServiceState();
     });
 }
+
+
 
 /***********************
  * Poller manager (no leaks)
@@ -222,14 +242,22 @@ function setWalletAlias(aliasStr){
     if(aliasStr && !$("#alias-input").val()) $("#alias-input").val(aliasStr);
 }
 function setWalletAddress(addressStr){
-    $("#wallet-address").text(addressStr ? String(addressStr) : "Error");
-    CURRENT_ADDRESS = addressStr || null;
-    if(CURRENT_ADDRESS){
+    const $input = $("#wallet-address-input");
+    const addr = addressStr ? String(addressStr) : "";
+    $input.val(addr || "Error");
+    CURRENT_ADDRESS = addr || null;
+
+    if (CURRENT_ADDRESS){
         if(!qrcode){
-            qrcode = new QRCode("qrcode", { text:"zano:"+CURRENT_ADDRESS, width:128, height:128, colorDark:"#000000", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.M });
-        }else{
+            qrcode = new QRCode("qrcode", {
+                text: "zano:" + CURRENT_ADDRESS,
+                width: 128, height: 128,
+                colorDark: "#000000", colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        } else {
             qrcode.clear();
-            qrcode.makeCode("zano:"+CURRENT_ADDRESS);
+            qrcode.makeCode("zano:" + CURRENT_ADDRESS);
         }
     }
 }
@@ -291,7 +319,7 @@ function updateOrdersTable(orders){
             $("<td>").text(fmtFloat(o.total,8)),
             $("<td>").text(fmtFloat(o.zanoPrice,6)),
             $("<td>").append(statusBadge),
-            $("<td>").text(o.createdAt? new Date(o.createdAt).toLocaleString() : "—"),
+            $("<td>").text(o.createdAt ? fmtTime(o.createdAt) : "—"),
         );
         $tb.append($tr);
     });
@@ -371,13 +399,13 @@ function renderTrades(payload){
             $("<td>").text(fmtFloat(mxZano,12)),
             $("<td>").text(fmtFloat(mxPrice,6)),
             $("<td>").text(fmtFloat(mxUsdtT,6)),
-            $("<td class='colsecr'>").append(mx?badgeForStatus(mxStatus,mxStr):$("<span>").addClass("text-muted").text("—"))
-                .append(mx? $("<div>").addClass("text-muted small").text(new Date(mxTs).toLocaleString()):""),
+            $("<td class='colsecr'>").append(mx ? badgeForStatus(mxStatus, mxStr) : $("<span>").addClass("text-muted").text("—"))
+                .append(mx ? $("<div>").addClass("text-muted small").text(fmtTime(mxTs)) : ""),
             $("<td>").text(fb?fmtFloat(fbFusd,8):"—"),
             $("<td>").text(fb?fmtFloat(fbPrice,8):"—"),
             $("<td>").text(fb?fmtFloat(fbUsdt,8):"—"),
-            $("<td>").append(fb?badgeForStatus(fbStatus,fbStr):$("<span>").addClass("text-muted").text("—"))
-                .append(fb? $("<div>").addClass("text-muted small").text(new Date(fbTs).toLocaleString()):"")
+            $("<td>").append(fb ? badgeForStatus(fbStatus, fbStr) : $("<span>").addClass("text-muted").text("—"))
+                .append(fb ? $("<div>").addClass("text-muted small").text(fmtTime(fbTs)) : "")
         );
         if(typeof mxStatus==="number" && mxStatus<0){ $tr.attr("title","MEXC sell failed"); }
         $tb.append($tr);
@@ -458,6 +486,7 @@ function renderRowsBuy(payload) {
             $("<td>").append(mxFusdSell ? badgeForStatus(mxFusdStatus, mxFusdStatusStr) : $("<span>").addClass("text-muted").text("—"))
                 .append(mxFusdSell ? $("<div>").addClass("text-muted small").text(fmtTime(mxFusdTs)) : ""),
 
+
             // MEXC BUY ZANO
             $("<td>").text(fmtFloat(mxZanoBuyZano, 4)),
             $("<td>").text(fmtFloat(mxZanoBuyPrice, 4)),
@@ -528,7 +557,7 @@ $(function(){
                 if (jqXHR.responseJSON && jqXHR.responseJSON.message && jqXHR.responseJSON.message.includes("WALLET_RPC_ERROR_CODE_NOT_ENOUGH_MONEY")) {
                     $help.removeClass("text-success").addClass("text-danger").text("Failed to save alias, not enough money in wallet.");
                 } else {
-                    $help.removeClass("text-success").addClass("text-danger").text("Failed to save alias ("+jqXHR.status+").");
+                    $help.removeClass("text-success").addClass("text-danger").text("Failed to save alias ("+jqXHR.responseJSON.message+").");
                 }
             })
             .always(function(){ $btn.prop("disabled", false); });
@@ -599,7 +628,7 @@ function updateAppStatusCard(){
     if (!serviceState.wallet) {
         hints.push("Wallet service is not active yet. If freshly started, give it a moment. To set an alias, deposit at least 0.11 ZANO.");
     } else {
-        if (!serviceState.alias) {
+        if (!serviceState.alias && !serviceState.pendingAlias) {
             if (!walletHasMinZano(0.11)) {
                 hints.push("Deposit at least 0.11 ZANO so you can create a wallet alias.");
             }
@@ -625,6 +654,34 @@ function updateAppStatusCard(){
             hints.push('Ensure your MEXC API key and secret are configured on the <a href="/settings">Settings</a> page.');
         }
     }
+
+    // Enable tooltip on the copy button (Bootstrap 5)
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+
+// Copy address to clipboard
+    $(document).on("click", "#btn-copy-address", async function(){
+        const btn = this;
+        const val = $("#wallet-address-input").val();
+        if(!val || val === "Error" || val === "Loading...") return;
+
+        // try async clipboard; fallback to execCommand for older browsers
+        try {
+            await navigator.clipboard.writeText(val);
+        } catch(_) {
+            const el = document.getElementById("wallet-address-input");
+            el.removeAttribute("readonly");
+            el.select(); el.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            el.setAttribute("readonly", "readonly");
+            window.getSelection()?.removeAllRanges();
+        }
+
+        // visual feedback
+        btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+        setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 1200);
+    });
+
 
     // Final message
     $("#appstatus-help").html(

@@ -36,8 +36,6 @@ const SETTINGS_SCHEMA = [
     { section: "MEXC API / Deposit Addresses" },
     { key:"mexcApiKey",               label:"MEXC API Key",                         type:"text",  autocomplete:"off" },
     { key:"mexcApiSecret",            label:"MEXC API Secret",                      type:"password", autocomplete:"new-password", maskable:true },
-    { key:"mexcDepositAddressZano",   label:"MEXC deposit address (ZANO)",          type:"text" },
-    { key:"mexcDepositAddressFusd",   label:"MEXC deposit address (fUSD)",          type:"text" },
     // CEX selling params (kept near API for convenience)
     { section: "CEX — Selling Parameters" },
     { key:"zanoSellPercent",          label:"ZANO sell percent (%)",                type:"number", step:"0.01" },
