@@ -9,4 +9,5 @@ import lombok.ToString;
 public class TwoFaRegReq {
     private TwoFactorType type;
     private String code;
+    private String otp;
 }

@@ -98,6 +98,9 @@
     .table-responsive th {background-color: #0f2055; color: #FFF;}
     .table-responsive td {background-color: #0f2055; color: #DDD;}
     .input-group input::placeholder {color: #AAA;}
+    h5.modal-title {color: #313131;}
+    .modal-body p {color: #313131;}
+    #confirm-otp-input {border-color: #AAA; }
   </style>
 </head>
 <body>
@@ -219,7 +222,7 @@
                     <i class="bi bi-clipboard"></i>
                   </button>
                 </div>
-                <small class="text-muted">URI includes account label “Wallet Operations” and issuer “fUSD Market Maker”.</small>
+                <small class="text-muted">URI includes account label “fUSD MMbot” and issuer “fUSD Market Maker”.</small>
               </div>
 
               <div class="col-12">
@@ -257,7 +260,7 @@
                   <span class="working d-none"><span class="spinner-border spinner-border-sm me-1"></span>Registering…</span>
                 </button>
               </div>
-              <small class="text-muted d-block mt-2">Example: <span class="mono">cccccclhvivgbfenhlrtnvitfunvtbtfdvttrfbbuced</span></small>
+              <small class="text-muted d-block mt-2"><span class="mono"></span></small>
             </div>
           </div>
         </div>
@@ -266,10 +269,39 @@
   </div>
 </main>
 
+
+<!-- Confirm with existing 2FA (shown when at least one method is already registered) -->
+<div class="modal fade" id="confirm-2fa-modal" tabindex="-1" aria-labelledby="confirm2faTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="color: #000;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirm2faTitle"><i class="bi bi-shield-lock me-2"></i>Confirm with existing 2FA</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">To add a new method, please enter an OTP from any currently registered 2FA (Google Authenticator code <em>or</em> a YubiKey OTP).</p>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
+          <input id="confirm-otp-input" type="text" class="form-control mono" placeholder="6‑digit code or YubiKey OTP" autocomplete="one-time-code" />
+        </div>
+        <small id="confirm-otp-help" class="text-muted d-block mt-2">Enter an OTP from any registered 2FA.</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="confirm-otp-submit" type="button" class="btn btn-primary" disabled>
+          <span class="default"><i class="bi bi-check2-circle"></i> Continue</span>
+          <span class="working d-none"><span class="spinner-border spinner-border-sm me-1"></span>Submitting…</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- jQuery / Bootstrap / QR -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="/js/qrcode.js"></script>
+
 
 <script>
   (function () {
@@ -320,9 +352,8 @@
     el.className = 'badge ' + (variant === 'ok' ? 'bg-success' : variant === 'warn' ? 'bg-primary' : 'bg-secondary');
   }
 
-  function isoNow() {
-    const d = new Date(); return d.toISOString().slice(0,19).replace('T',' ') + 'Z';
-  }
+  // Tracks whether any 2FA methods already exist.
+  let hasAny2FA = false;
 
   // Registered methods list
   async function loadRegistered() {
@@ -333,10 +364,14 @@
       const data = await res.json();
       const tbody = document.getElementById('twofa-tbody');
       tbody.innerHTML = '';
-      if (!data || !Array.isArray(data.payload) || data.payload.length === 0) {
+
+      const rows = (data && Array.isArray(data.payload)) ? data.payload : [];
+      hasAny2FA = rows.length > 0;
+
+      if (!hasAny2FA) {
         tbody.innerHTML = '<tr><td class="text-muted" colspan="3">No 2FA configured yet.</td></tr>';
       } else {
-        data.payload.forEach(row => {
+        rows.forEach(row => {
           const tr = document.createElement('tr');
           const type = document.createElement('td'); type.textContent = row.type || '—';
           const info = document.createElement('td'); info.innerHTML = '<span class="mono">' + (row.data || '—') + '</span>';
@@ -370,8 +405,7 @@
   }
 
   function buildOtpAuthUri(secret) {
-    const issuer = encodeURIComponent('fUSD Market Maker');
-    const label = encodeURIComponent('Wallet Operations');
+    const label = encodeURIComponent('fUSD MMbot');
     const params = new URLSearchParams({ secret: secret, issuer: 'fUSD Market Maker', period: 30, digits: 6, algorithm: 'SHA1' });
     return `otpauth://totp/${label}?${params.toString()}`;
   }
@@ -393,7 +427,7 @@
       document.getElementById('ga-otpauth').value = uri;
       document.getElementById('btn-copy-otpauth').disabled = false;
 
-      // Render QR (uses /js/qrcode.js as on your other page)
+      // Render QR
       const qrEl = document.getElementById('ga-qrcode');
       qrEl.innerHTML = '';
       gaQR = new QRCode(qrEl, { text: uri, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
@@ -404,23 +438,77 @@
     }
   }
 
+  // Modal prompting for an OTP from an existing 2FA method (if any already registered)
+  function promptExisting2FA() {
+    return new Promise((resolve) => {
+      if (!hasAny2FA) return resolve(null); // not required
+
+      const modalEl = document.getElementById('confirm-2fa-modal');
+      const input = document.getElementById('confirm-otp-input');
+      const submitBtn = document.getElementById('confirm-otp-submit');
+      const help = document.getElementById('confirm-otp-help');
+
+      input.value = '';
+      help.textContent = 'Enter an OTP from any registered 2FA.';
+      submitBtn.disabled = true;
+
+      const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+
+      function onInput() {
+        const val = (input.value || '').trim();
+        const isTotp = /^[0-9]{6}$/.test(val);
+        const isYubi = val.length >= 32; // loose check; backend does final regex
+        submitBtn.disabled = !(isTotp || isYubi);
+        help.textContent = !val ? 'Enter an OTP from any registered 2FA.' : (isTotp ? 'Detected 6‑digit Google Auth code.' : 'Looks like a YubiKey OTP.');
+      }
+      function cleanup() {
+        input.removeEventListener('input', onInput);
+        input.removeEventListener('keydown', onKey);
+        submitBtn.removeEventListener('click', onSubmit);
+        modalEl.removeEventListener('hidden.bs.modal', onCancel);
+      }
+      function onSubmit() {
+        const v = (input.value || '').trim();
+        cleanup(); modal.hide(); resolve(v);
+      }
+      function onCancel() { cleanup(); resolve(null); }
+      function onKey(e) { if (e.key === 'Enter' && !submitBtn.disabled) { e.preventDefault(); onSubmit(); } }
+
+      input.addEventListener('input', onInput);
+      input.addEventListener('keydown', onKey);
+      submitBtn.addEventListener('click', onSubmit);
+      modalEl.addEventListener('hidden.bs.modal', onCancel, { once: true });
+
+      modal.show();
+      setTimeout(() => input.focus(), 250);
+    });
+  }
+
   async function registerGA() {
     const btn = document.getElementById('btn-register-ga');
     const code = (document.getElementById('ga-code').value || '').trim();
     if (!gaSecret) { showAlert('Generate a secret first.', 'danger'); return; }
     if (!/^[0-9]{6}$/.test(code)) { showAlert('Enter a valid 6‑digit code.', 'danger'); return; }
 
+    // If there are already registered 2FA methods, confirm with an existing OTP first
+    let otp = null;
+    if (hasAny2FA) {
+      otp = await promptExisting2FA();
+      if (otp === null) { showAlert('Registration canceled.', 'info'); return; }
+    }
+
     btn.disabled = true;
     btn.querySelector('.default').classList.add('d-none');
     btn.querySelector('.working').classList.remove('d-none');
     setBadge(document.getElementById('ga-status'), 'Registering…', 'warn');
 
-    // Some backends use "GOOGLEAUTH"; your example also shows a "GOOGLEAUTAH" variant.
     async function tryRegister(typeValue) {
+      const body = { code: code, type: typeValue };
+      if (otp) body.otp = otp; // append OTP from existing 2FA (if required)
       const res = await fetch('/api/register-2fa', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code, type: typeValue })
+        body: JSON.stringify(body)
       });
       return res.json();
     }
@@ -454,15 +542,25 @@
     const btn = document.getElementById('btn-register-yk');
     const code = (document.getElementById('yk-code').value || '').trim();
     if (!ykValidate(code)) { showAlert('Tap your YubiKey to fill a full OTP first.', 'danger'); return; }
+
+    // If there are already registered 2FA methods, confirm with an existing OTP first
+    let otp = null;
+    if (hasAny2FA) {
+      otp = await promptExisting2FA();
+      if (otp === null) { showAlert('Registration canceled.', 'info'); return; }
+    }
+
     btn.disabled = true;
     btn.querySelector('.default').classList.add('d-none');
     btn.querySelector('.working').classList.remove('d-none');
     setBadge(document.getElementById('yk-status'), 'Registering…', 'warn');
     try {
+      const body = { code: code, type: 'YUBIKEY' };
+      if (otp) body.otp = otp; // append OTP from existing 2FA (if required)
       const res = await fetch('/api/register-2fa', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code, type: 'YUBIKEY' })
+        body: JSON.stringify(body)
       });
       const json = await res.json();
       if (!json || json.status !== 200) throw new Error(json?.message || 'Registration failed');

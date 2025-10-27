@@ -33,6 +33,9 @@ import java.util.List;
 @Controller
 public class TwoFaEndpoints {
 
+    private int failedFa = 0;
+    private long blocked2FaUntil = 0;
+
     private String pendingSecretKey = null;
 
     @RequestMapping(value="/api/get-2fas", produces="application/json", method=RequestMethod.GET)
@@ -95,6 +98,39 @@ public class TwoFaEndpoints {
             responseBean.setStatus(400);
 
             return new ResponseEntity<>(responseBean, HttpStatus.BAD_REQUEST);
+        }
+
+        List<TwoFactorData> twoFaList = DatabaseService.get2FaData(null, 1);
+        if (!twoFaList.isEmpty()) {
+
+            if ((System.currentTimeMillis()/1000) < blocked2FaUntil) {
+                responseBean.setMessage("Two factor authentication is temporarily blocked due to too many attempts.");
+                responseBean.setStatus(405);
+                return new ResponseEntity<>(responseBean, HttpStatus.METHOD_NOT_ALLOWED);
+            }
+
+            boolean twoFaValid = false;
+            for (TwoFactorData twoFactorData : twoFaList) {
+                if (twoFaRegReq.getOtp().startsWith("ccc") && twoFactorData.getType().equals(TwoFactorType.YUBIKEY)) {
+                    if (TwoFaEndpoints.validateYubikey(twoFaRegReq.getOtp(), twoFactorData.getData())) {
+                        twoFaValid = true;
+                        failedFa = 0;
+                    } else {
+                        System.out.println("Yubikey validation failed");
+                    }
+                } else {
+                    if (twoFaRegReq.getOtp().equals(GoogleAuth.getTOTPCode(twoFactorData.getData()))) {
+                        twoFaValid = true;
+                        failedFa = 0;
+                    }
+                }
+            }
+
+            if (!twoFaValid) {
+                responseBean.setMessage("The 2FA code is wrong");
+                responseBean.setStatus(401);
+                return new ResponseEntity<>(responseBean, HttpStatus.UNAUTHORIZED);
+            }
         }
 
         if (twoFaRegReq.getType().equals(TwoFactorType.GOOGLEAUTH)) {
