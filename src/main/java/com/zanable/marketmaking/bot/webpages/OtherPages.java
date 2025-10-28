@@ -10,7 +10,7 @@ public class OtherPages {
     @GetMapping(value="/settings", produces={"text/html"})
     public String displaySettingsPage(Model model) {
 
-        return "settings2.html";
+        return "settings.html";
     }
 
     @GetMapping(value="/transactions", produces={"text/html"})

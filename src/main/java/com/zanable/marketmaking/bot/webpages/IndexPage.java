@@ -10,6 +10,6 @@ public class IndexPage {
     @GetMapping(value="/", produces={"text/html"})
     public String displaySetupPage(Model model) {
 
-        return "menusystem.html";
+        return "dashboard.html";
     }
 }

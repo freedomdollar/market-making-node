@@ -461,7 +461,7 @@ public class DatabaseService implements ApplicationService {
             Connection conn = getConnection();
             String query = "SELECT A.zano_amount, A.token_amount, B.decimals, B.ticker, A.zano_usdt_price, A.type, A.timestamp, A.my_order_id, A.other_order_id, A.seq_id FROM trade_log A JOIN zano_assets B ON (A.asset_id = B.asset_id) WHERE seq_id IS NOT NULL AND type='sell' ORDER BY timestamp DESC LIMIT ?;";
             if (count == 0) {
-                query = "SELECT A.zano_amount, A.token_amount, B.decimals, B.ticker, A.zano_usdt_price, A.type, A.timestamp, A.seq_id FROM trade_log A JOIN zano_assets B ON (A.asset_id = B.asset_id) seq_id IS NOT NULL AND type='sell' ORDER BY timestamp DESC;";
+                query = "SELECT A.zano_amount, A.token_amount, B.decimals, B.ticker, A.zano_usdt_price, A.type, A.timestamp, A.seq_id, A.my_order_id, A.other_order_id FROM trade_log A JOIN zano_assets B ON (A.asset_id = B.asset_id) WHERE seq_id IS NOT NULL AND type='sell' ORDER BY timestamp DESC;";
             }
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setInt(1, count);
@@ -511,7 +511,7 @@ public class DatabaseService implements ApplicationService {
             Connection conn = getConnection();
             String query = "SELECT A.zano_amount, A.token_amount, B.decimals, B.ticker, A.zano_usdt_price, A.type, A.timestamp, A.my_order_id, A.other_order_id, A.seq_id FROM trade_log A JOIN zano_assets B ON (A.asset_id = B.asset_id) WHERE seq_id IS NOT NULL AND type='buy' ORDER BY timestamp DESC LIMIT ?;";
             if (count == 0) {
-                query = "SELECT A.zano_amount, A.token_amount, B.decimals, B.ticker, A.zano_usdt_price, A.type, A.timestamp, A.seq_id FROM trade_log A JOIN zano_assets B ON (A.asset_id = B.asset_id) seq_id IS NOT NULL AND type='buy' ORDER BY timestamp DESC;";
+                query = "SELECT A.zano_amount, A.token_amount, B.decimals, B.ticker, A.zano_usdt_price, A.type, A.timestamp, A.seq_id, A.my_order_id, A.other_order_id FROM trade_log A JOIN zano_assets B ON (A.asset_id = B.asset_id) WHERE seq_id IS NOT NULL AND type='buy' ORDER BY timestamp DESC;";
             }
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setInt(1, count);
@@ -553,6 +553,14 @@ public class DatabaseService implements ApplicationService {
             e.printStackTrace();
         }
         return trades;
+    }
+
+    public static void getTokenSellPnL() {
+        // How many tokens have we sold
+        // SELECT SUM(A.token_amount), B.decimals, B.ticker, AVG(A.zano_usdt_price) FROM trade_log A JOIN zano_assets B ON (A.asset_id = B.asset_id) WHERE seq_id IS NOT NULL AND type='sell';
+
+        // How many tokens did we buy back on the CEX
+        // SELECT SUM(fusd_amount_filled) AS fUSDbought FROM fusd_buy_back_log WHERE status=3;
     }
 
     public static List<WalletTransaction> getWalletTransactions(Connection conn, String walletIdent, long page, long pageSize) {

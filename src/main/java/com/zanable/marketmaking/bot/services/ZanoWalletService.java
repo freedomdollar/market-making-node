@@ -4,19 +4,15 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.zanable.marketmaking.bot.beans.ZanoWalletMeta;
 import com.zanable.marketmaking.bot.beans.zano.*;
 import com.zanable.marketmaking.bot.beans.zano.trade.ZanoTradeAuthRequest;
 import com.zanable.marketmaking.bot.beans.zano.trade.ZanoTradeAuthRequestData;
 import com.zanable.marketmaking.bot.beans.zano.trade.ZanoTradeAuthResponse;
 import com.zanable.marketmaking.bot.exceptions.ZanoWalletException;
-import com.zanable.marketmaking.bot.tools.TxSigner;
 import com.zanable.shared.beans.NewAddressResponse;
 import com.zanable.shared.beans.SendResponse;
 import com.zanable.shared.exceptions.AssetNotFoundException;
-import com.zanable.shared.exceptions.JWTBuildFailedException;
 import com.zanable.shared.exceptions.NoApiResponseException;
 import com.zanable.shared.exceptions.NotEnoughMoneyException;
 import com.zanable.shared.interfaces.ApplicationService;
@@ -483,35 +479,6 @@ public class ZanoWalletService implements ApplicationService {
                 }
             }
         }
-    }
-
-    private static ArrayList<JWTClaimsSet> processTxFromZano(JSONObject txJson) throws JOSEException, JWTBuildFailedException, NoApiResponseException {
-        WalletTx walletTx = new WalletTx(txJson);
-        walletTx.setThisWalletAddress(walletAddress);
-        walletTx.setThisWalletAlias(walletAlias);
-        walletTx.setConfirmations(blockHeight - walletTx.getHeight() - 1);
-
-        // Check sub assets
-        for (Subtransfer subtransfer : walletTx.getSubtransfers()) {
-            if (!assetCache.containsKey(subtransfer.getAsset_id())) {
-                AssetInfo assetInfo = getAssetInfo(subtransfer.getAsset_id());
-                assetCache.put(subtransfer.getAsset_id(), assetInfo);
-                subtransfer.setAsset_info(assetInfo);
-            } else {
-                subtransfer.setAsset_info(assetCache.get(subtransfer.getAsset_id()));
-            }
-            BigDecimal getRealAmount = new BigDecimal(subtransfer.getAmount());
-            getRealAmount = getRealAmount.movePointLeft(subtransfer.getAsset_info().getDecimal_point());
-
-            // Get confirmations
-            // TxInfo txInfo = getTransactionInfo(walletTx.getTxHash());
-
-            System.out.println(walletTx.getTxHash() + ", " + getRealAmount.toPlainString() + " " +
-                    subtransfer.getAsset_info().getTicker() + ", " + walletTx.getTimestamp() + ", account: " + walletTx.getPaymentId());
-            TxSigner txSigner = new TxSigner(config);
-            return txSigner.convertToClaimsSet(walletTx);
-        }
-        throw new JWTBuildFailedException("Could not convert wallettx object to JWT claims set");
     }
 
     public static JSONObject getInfo() {
