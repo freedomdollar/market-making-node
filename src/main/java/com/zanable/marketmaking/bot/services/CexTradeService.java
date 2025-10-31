@@ -350,10 +350,11 @@ public class CexTradeService implements ApplicationService {
                     System.out.println("OrderId was null");
                     System.out.println(placeOrderResponse);
                     if (placeOrderResponse.contains("The minimum transaction volume cannot be less than")) {
-                        DatabaseService.updateZanoSellOrder(buyBack.getId(), -1, BigDecimal.ZERO, spotOrderResponse.getOrderId(), buyBack.getZanoPrice());
+                        // To do
                     } else if (placeOrderResponse.contains("Oversold")) {
-                        // DatabaseService.updateZanoSellOrder(buyBack.getId(), -2);
+                        // To do
                     }
+                    DatabaseService.updateZanoSellOrder(buyBack.getId(), -1, BigDecimal.ZERO, spotOrderResponse.getOrderId(), buyBack.getZanoPrice());
                 }
 
 
