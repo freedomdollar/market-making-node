@@ -392,7 +392,7 @@ function renderTrades(payload){
 
         const $tr=$("<tr>");
         $tr.append(
-            $("<td>").text(new Date(tsDex).toLocaleString()),
+            $("<td>").text(toIsoLocal(new Date(tsDex))),
             $("<td>").text(fmtFloat(fusdSold, tr.decimals??8)),
             $("<td>").text(fmtFloat(zanoRecv, 12)),
             $("<td class='colsecr'>").text(fmtFloat(zanoUsdtRef,8)),

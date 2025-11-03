@@ -30,12 +30,6 @@ public class ZanoDaemonService implements ApplicationService {
     private static boolean isChainDownloading = false;
     private static boolean isZanoReady = false;
 
-    /*
-    app-1              | 2025-09-30T12:14:44.633Z  INFO 1 --- [pool-2-thread-1] c.z.m.bot.services.ZanoDaemonService     : {"height":0,"status":"BUSY"}
-app-1              | 2025-09-30T12:14:44.633Z  INFO 1 --- [pool-2-thread-1] c.z.m.bot.services.ZanoDaemonService     : Zano daemon status: BUSY
-app-1              | 2025-09-30T12:14:44.636Z  INFO 1 --- [pool-2-thread-1] c.z.m.bot.services.ZanoDaemonService     : ZANO daemon is in state 1 and height 3178546
-     */
-
     public ZanoDaemonService() {
 
     }
