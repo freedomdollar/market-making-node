@@ -1,18 +1,25 @@
 package com.zanable.marketmaking.bot.endpoints;
 
+import com.google.gson.Gson;
 import com.zanable.marketmaking.bot.ApplicationStartup;
+import com.zanable.marketmaking.bot.beans.GitHubRelease;
 import com.zanable.marketmaking.bot.beans.api.ApiResponseBean;
 import com.zanable.marketmaking.bot.beans.api.ApplicationStatusBean;
 import com.zanable.marketmaking.bot.services.SettingsService;
 import com.zanable.marketmaking.bot.services.ZanoDaemonService;
 import com.zanable.marketmaking.bot.services.ZanoTradeService;
 import com.zanable.marketmaking.bot.services.ZanoWalletService;
+import com.zanable.marketmaking.bot.tools.VersionUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @Controller
 public class ApplicationStatus {
@@ -61,6 +68,13 @@ public class ApplicationStatus {
             if (ZanoTradeService.isTradingOpen()) {
                 applicationStatusBean.setZanoDexTradingBotActive(true);
             }
+            if (ApplicationStartup.isTelegramServiceStarted()) {
+                applicationStatusBean.setTelegramServiceActive(true);
+            }
+
+            applicationStatusBean.setAppVersion(VersionUtil.getVersion());
+            applicationStatusBean.setLatestReleaseVersion(ApplicationStartup.getLatestReleaseVersion());
+            applicationStatusBean.setUpdateAvailable(ApplicationStartup.isUpdateAvailable());
 
             statusResponse.setPayload(applicationStatusBean);
 

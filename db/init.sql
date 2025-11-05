@@ -619,6 +619,7 @@ INSERT INTO app_settings (`key`, value) VALUES ('fusd_move_to_wallet_min_trans',
 INSERT INTO app_settings (`key`, value) VALUES ('enable_autostart_dex_bot', '0');
 INSERT INTO app_settings (`key`, value) VALUES ('enable_fusd_sell', '0');
 INSERT INTO app_settings (`key`, value) VALUES ('enable_zano_buy', '0');
+INSERT INTO app_settings (`key`, value) VALUES ('telegram_bot_api_offset', '0');
 
 
 INSERT INTO settings (transaction_index, wallet_ident) VALUES (0, 'main');
@@ -665,3 +666,10 @@ CREATE TABLE `usdt_to_zano_cex_trade_log` (
                                               PRIMARY KEY (`id`),
                                               KEY `usdt_to_zano_cex_trade_log_status_index` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
+
+CREATE TABLE `telegram_channels` (
+                                     `channel_id` bigint(20) NOT NULL,
+                                     `channel_name` varchar(256) DEFAULT NULL,
+                                     PRIMARY KEY (`channel_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;

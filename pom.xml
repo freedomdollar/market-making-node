@@ -6,7 +6,7 @@
 
     <groupId>com.zanable.marketmaking.bot</groupId>
     <artifactId>TradeBot</artifactId>
-    <version>1.0</version>
+    <version>0.9.1</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -177,6 +177,17 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <!-- compile proto file into java files. -->
             <!--

@@ -1,6 +1,7 @@
 package com.zanable.marketmaking.bot.services;
 
 import com.zanable.marketmaking.bot.ApplicationStartup;
+import com.zanable.marketmaking.bot.beans.TelegramChannel;
 import com.zanable.marketmaking.bot.beans.TwoFactorData;
 import com.zanable.marketmaking.bot.beans.WalletTransaction;
 import com.zanable.marketmaking.bot.beans.api.ExtendedTradeChain;
@@ -16,11 +17,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class DatabaseService implements ApplicationService {
@@ -40,6 +45,16 @@ public class DatabaseService implements ApplicationService {
 
     @Override
     public void init() {
+
+        while(!DatabaseService.testDatabaseConnection()) {
+            logger.info("Waiting for database to be ready.");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         logger.info("Starting database service. Tx index is " + getTxIndex("main"));
 
         try {
@@ -964,6 +979,73 @@ public class DatabaseService implements ApplicationService {
         return -1;
     }
 
+    public static void insertTelegramChannel(Connection conn, long channelId, String name) {
+        boolean connWasNull = false;
+        try {
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            String query = "INSERT IGNORE INTO telegram_channels (channel_id, channel_name) " +
+                    "VALUES (?,?);";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setLong(1, channelId);
+            ps.setString(2, name);
+            ps.execute();
+
+            if (connWasNull) {
+                conn.close();
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void removeTelegramChannel(Connection conn, long channelId) {
+        boolean connWasNull = false;
+        try {
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            String query = "DELETE FROM telegram_channels WHERE channel_id=?";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setLong(1, channelId);
+            ps.execute();
+
+            if (connWasNull) {
+                conn.close();
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<TelegramChannel> getTelegramChannels(Connection conn) {
+
+        List<TelegramChannel> channels = new ArrayList<>();
+        boolean connWasNull = false;
+        try {
+            if (conn == null) {
+                conn = getConnection();
+                connWasNull = true;
+            }
+            PreparedStatement ps = conn.prepareStatement("SELECT * FROM telegram_channels");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                channels.add(new TelegramChannel(rs.getLong("channel_id"), rs.getString("channel_name")));
+            }
+            if (!connWasNull) {
+                conn.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return channels;
+    }
+
     public static List<TwoFactorData> get2FaData(Connection conn, long loginId) {
 
         List<TwoFactorData> twoFaList = new ArrayList<>();
@@ -1687,6 +1769,53 @@ public class DatabaseService implements ApplicationService {
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void applyPatch(String resourceFileName) throws Exception {
+        applyPatch(getConnection(), resourceFileName);
+    }
+
+    /**
+     * Executes the SQL patch file from the resources folder.
+     *
+     * @param connection Active JDBC connection (MariaDB)
+     * @param resourceFileName Path to the SQL file in resources (e.g. "db/patches/v2_patch.sql")
+     * @throws Exception if any I/O or SQL error occurs
+     */
+    public static void applyPatch(Connection connection, String resourceFileName) throws Exception {
+        // Load the SQL file from classpath
+        InputStream inputStream = DatabaseService.class.getClassLoader().getResourceAsStream(resourceFileName);
+        if (inputStream == null) {
+            throw new IllegalArgumentException("SQL file not found in resources: " + resourceFileName);
+        }
+
+        // Read the entire file as a single string
+        String sql = new BufferedReader(new InputStreamReader(inputStream))
+                .lines()
+                .collect(Collectors.joining("\n"));
+
+        // Split SQL statements by semicolon (basic splitting — works for most migration scripts)
+        String[] statements = sql.split("(?<=;)(?=\\s*[^\\n])");
+
+        try (Statement stmt = connection.createStatement()) {
+            for (String s : statements) {
+                String trimmed = s.trim();
+                if (!trimmed.isEmpty()) {
+                    boolean executed = stmt.execute(trimmed);
+                    logger.info("Database patch " + trimmed + " was executed.");
+                }
+            }
+        }
+    }
+
+    public static boolean testDatabaseConnection() {
+        try {
+            Connection connection = getConnection();
+            connection.close();
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 

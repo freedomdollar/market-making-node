@@ -90,8 +90,8 @@ function applyServiceState(){
         $("#alias-input").hide();
         $("#alias-save-btn").hide();
     } else {
-        $("#alias-input").removeAttribute("disabled", "disabled");
-        $("#alias-save-btn").removeAttribute("disabled", "disabled");
+        $("#alias-input").removeAttr("disabled", "disabled");
+        $("#alias-save-btn").removeAttr("disabled", "disabled");
         $("#alias-input").show();
         $("#alias-save-btn").show();
     }
@@ -120,11 +120,13 @@ function refreshAppStatus(){
         serviceState.alias    = !!p.walletHasAlias;
         serviceState.pendingAlias    = !!p.walletHasPendingAlias;
         serviceState.tradingOpen = !!p.zanoDexTradingBotActive;
+        serviceState.telegram = !!p.telegramServiceActive;
+        serviceState.update = !!p.updateAvailable;
 
         applyServiceState();
     }).fail(function(){
         // If status endpoint fails, consider all inactive to avoid spamming other endpoints.
-        serviceState.daemon = serviceState.wallet = serviceState.dex = serviceState.cex = serviceState.pendingAlias = serviceState.app = serviceState.alias = false;
+        serviceState.daemon = serviceState.wallet = serviceState.dex = serviceState.cex = serviceState.pendingAlias = serviceState.app = serviceState.alias = serviceState.telegram = serviceState.update = false;
         applyServiceState();
     });
 }
@@ -621,6 +623,8 @@ function updateAppStatusCard(){
     $("#appstat-wallet").html(iconYesNo(!!serviceState.wallet));
     $("#appstat-dex").html(iconYesNo(!!serviceState.dex));
     $("#appstat-cex").html(iconYesNo(!!serviceState.cex));
+    $("#appstat-telegram").html(iconYesNo(!!serviceState.telegram));
+    $("#appstat-version").html(iconYesNo(!!!serviceState.update));
 
     // Guidance text
     const hints = [];
@@ -653,6 +657,13 @@ function updateAppStatusCard(){
         } else {
             hints.push('Ensure your MEXC API key and secret are configured on the <a href="/settings">Settings</a> page.');
         }
+    }
+
+    if (!serviceState.telegram) {
+        hints.push("Create a Telegram bot and add the bot token on the settings page to configure a Telegram bot for error notifications.");
+    }
+    if (serviceState.update) {
+        hints.push("There is a new version of this software available.");
     }
 
     // Enable tooltip on the copy button (Bootstrap 5)

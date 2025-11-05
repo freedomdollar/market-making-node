@@ -6,6 +6,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ApplicationStatusBean {
+    private String appVersion;
+    private String latestReleaseVersion;
+    private boolean updateAvailable = false;
     private boolean appStarted = false;
     private boolean zanoDaemonActive = false;
     private boolean zanoWalletServiceActive = false;
@@ -14,4 +17,5 @@ public class ApplicationStatusBean {
     private boolean zanoDexTradingServiceActive = false;
     private boolean zanoDexTradingBotActive = false;
     private boolean zanoCexTradingServiceActive = false;
+    private boolean telegramServiceActive = false;
 }

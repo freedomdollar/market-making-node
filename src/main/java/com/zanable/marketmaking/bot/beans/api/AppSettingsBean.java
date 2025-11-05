@@ -39,4 +39,5 @@ public class AppSettingsBean {
     private String mexcApiSecret;
     private String mexcDepositAddressZano;
     private String mexcDepositAddressFusd;
+    private String telegramBotToken;
 }

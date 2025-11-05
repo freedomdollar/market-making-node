@@ -125,6 +125,10 @@ public class SettingsEndpoint {
                 appSettingsBean.setMexcApiSecret("********");
             }
 
+            if (SettingsService.getAppSettingSafe("telegram_bot_api_key") != null) {
+                appSettingsBean.setTelegramBotToken(SettingsService.getAppSettingSafe("telegram_bot_api_key"));
+            }
+
             responseBean.setMessage("OK");
             responseBean.setStatus(200);
             responseBean.setPayload(appSettingsBean);
@@ -191,6 +195,8 @@ public class SettingsEndpoint {
             SettingsService.saveAppSetting("mexc_deposit_address_fusd", appSettingsBean.getMexcDepositAddressFusd().trim());
         if (appSettingsBean.getMexcApiKey() != null)
             SettingsService.saveAppSetting("mexc_apikey", appSettingsBean.getMexcApiKey().trim());
+        if (appSettingsBean.getTelegramBotToken() != null)
+            SettingsService.saveAppSetting("telegram_bot_api_key", appSettingsBean.getTelegramBotToken().trim());
 
         if (appSettingsBean.getMexcApiSecret() != null) {
             String sec = appSettingsBean.getMexcApiSecret().trim();

@@ -2,6 +2,7 @@ package com.zanable.marketmaking.bot.endpoints;
 
 import com.google.gson.Gson;
 import com.zanable.marketmaking.bot.beans.api.ApiResponseBean;
+import com.zanable.marketmaking.bot.services.TelegramService;
 import com.zanable.marketmaking.bot.services.ZanoTradeService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,6 +46,19 @@ public class BotCommandV2 {
         ApiResponseBean responseBean = new ApiResponseBean();
         responseBean.setMessage("OK");
         responseBean.setStatus(200);
+
+        return new ResponseEntity<>(responseBean, HttpStatus.OK);
+    }
+
+    @RequestMapping(value="/api/telegram-test", produces="application/json", method=RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<ApiResponseBean> telegramTest(HttpServletRequest request, HttpServletResponse response) {
+        Gson gson = new Gson();
+
+        ApiResponseBean responseBean = new ApiResponseBean();
+        responseBean.setMessage("OK");
+        responseBean.setStatus(200);
+        TelegramService.sendMessageToAllChannels("This is a test");
 
         return new ResponseEntity<>(responseBean, HttpStatus.OK);
     }

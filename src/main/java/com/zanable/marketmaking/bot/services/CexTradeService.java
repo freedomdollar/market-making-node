@@ -192,6 +192,7 @@ public class CexTradeService implements ApplicationService {
                         System.err.println("Could not post order");
                         System.out.println(placeOrderResponse);
                         DatabaseService.updateUsdtToZanoBuyOrder(buyReq.getId(), -1, zanoPrice, zanoAmountToBuy, "");
+                        TelegramService.sendMessageToAllChannels("Could not post USDT to ZANO (BUY) order on CEX. " + placeOrderResponse);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -255,6 +256,7 @@ public class CexTradeService implements ApplicationService {
                     if (orderStatus.getOrderId() == null && orderStatus.getStatus() == null) {
                         if (orderStatus.getCode() == -2013) {
                             DatabaseService.updateFusdSellOrderCex(order.getId(), -1, orderStatus.getOrigQuoteOrderQty(), orderStatus.getExecutedQty(), order.getCexOrderId(), spotOrderResponse.getPrice());
+                            TelegramService.sendMessageToAllChannels("Could not post FUSD sell order on CEX. " + placeOrderResponse);
                         }
                     } else {
                         if (orderStatus.getStatus().equals("FILLED")) {
@@ -267,6 +269,7 @@ public class CexTradeService implements ApplicationService {
                     }
                 } else {
                     DatabaseService.updateFusdSellOrderCex(order.getId(), -2, BigDecimal.ZERO, BigDecimal.ZERO, order.getCexOrderId(), spotOrderResponse.getPrice());
+                    TelegramService.sendMessageToAllChannels("Could not post FUSD sell order on CEX. " + placeOrderResponse);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -355,6 +358,7 @@ public class CexTradeService implements ApplicationService {
                         // To do
                     }
                     DatabaseService.updateZanoSellOrder(buyBack.getId(), -1, BigDecimal.ZERO, spotOrderResponse.getOrderId(), buyBack.getZanoPrice());
+                    TelegramService.sendMessageToAllChannels("Could not post ZANO sell order on CEX. " + placeOrderResponse);
                 }
 
 
@@ -401,6 +405,7 @@ public class CexTradeService implements ApplicationService {
                 } else {
                     System.out.println("OrderId was null");
                     DatabaseService.updateFusdBuyOrder(buyReq.getId(), -1, spotOrderResponse.getMsg());
+                    TelegramService.sendMessageToAllChannels("Could not post FUSD buy order on CEX. " + placeOrderResponse);
                 }
 
             } catch (Exception e) {

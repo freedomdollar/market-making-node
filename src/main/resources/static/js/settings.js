@@ -1,6 +1,43 @@
 /************* Schema (order + types + per-field config) *************/
 const SECRET_MASK = "********";
 
+/************* Tooltips: per-setting help text *************/
+const TOOLTIP_TEXT = {
+    // DEX — Pricing
+    dexAskMultiplier: "Multiplier applied to the CEX ask when quoting the DEX ask (SELL). Setting 1.01 is 1%",
+    dexBidMultiplier: "Multiplier applied to the CEX bid when quoting the DEX bid (BUY). Setting 0.99 is 1%",
+    dexPriceMoveThreshold: "The threshold for updating the DEX order when the price moves on the central exchange.",
+
+    // DEX — Volumes
+    dexMinimumTokenSellVolume: "Minimum fUSD notional to place for sell orders on the DEX (otherwise based on volume on central exchange).",
+    dexMinimumTokenBuyVolume: "Minimum fUSD notional to place for buy order on the DEX  (otherwise based on volume on central exchange).",
+    dexMaximumTokenSellVolume: "Maximum fUSD notional allowed per sell order on DEX (empty = no cap).",
+    dexMaximumTokenBuyVolume: "Maximum fUSD notional allowed per buy order on DEX (empty = no cap).",
+
+    // Core Toggles
+    zanoSellEnabled: "After a DEX SELL, allow selling ZANO on CEX to rebalance.",
+    fusdBuyEnabled: "After a DEX SELL, allow buying fUSD for USDT on CEX to rebalance.",
+    zanoBuyEnabled: "After a DEX BUY, allow buying ZANO on CEX to rebalance.",
+    fusdSellEnabled: "After a DEX BUY, allow selling fUSD for USDT on CEX to rebalance.",
+    zanoMoveFromWalletEnabled: "Permit moving ZANO out of the wallet to the CEX account.",
+    mexcFusdWithdrawEnabled: "Permit fUSD withdrawals from the CEX account to the DEX trader.",
+    autoStartDexTradeBot: "Automatically start the DEX trade bot on app launch.",
+
+    // Transfers / Auto-move
+    zanoMoveToCexThreshold: "If wallet ZANO exceeds this amount, auto-move to CEX.",
+    zanoMoveToCexMinTransfer: "Minimum ZANO size for an auto-move transfer to CEX.",
+    fusdMoveToWalletTheshold: "If CEX fUSD exceeds this amount, auto-move to wallet.",
+    fusdMoveToWalletMinTransfer: "Minimum fUSD size for an auto-move transfer to wallet.",
+
+    // MEXC API / Deposit Addresses
+    mexcApiKey: "Your MEXC API key used for authenticated CEX requests.",
+    mexcApiSecret: "Your MEXC API secret (kept masked; leave blank to keep existing).",
+
+    // CEX — Selling Parameters
+    zanoSellPercent: "Percent of available ZANO to sell on CEX during a rebalance. Setting 100 means 100% (recommended)",
+    zanoSellPriceMultiplier: "Multiplier applied to reference price when placing the CEX sell. Setting 1.01 is 1%."
+};
+
 const SETTINGS_SCHEMA = [
     // DEX pricing
     { section: "DEX — Pricing" },
@@ -36,6 +73,7 @@ const SETTINGS_SCHEMA = [
     { section: "MEXC API / Deposit Addresses" },
     { key:"mexcApiKey",               label:"MEXC API Key",                         type:"text",  autocomplete:"off" },
     { key:"mexcApiSecret",            label:"MEXC API Secret",                      type:"password", autocomplete:"new-password", maskable:true },
+    { key:"telegramBotToken",         label:"Telegram bot token",             type:"text",  autocomplete:"off" },
     // CEX selling params (kept near API for convenience)
     { section: "CEX — Selling Parameters" },
     { key:"zanoSellPercent",          label:"ZANO sell percent (%)",                type:"number", step:"0.01" },
@@ -48,6 +86,11 @@ function sectionRow(title){
 }
 function fieldId(key){ return "setting-" + key.replace(/[^A-Za-z0-9_-]/g,"-"); }
 
+function initTooltips(){
+    const els = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    els.forEach(el => new bootstrap.Tooltip(el, { container: 'body' }));
+}
+
 function renderSettingsTable(){
     const $tb = $("#settings-tbody").empty();
     SETTINGS_SCHEMA.forEach(def=>{
@@ -57,8 +100,22 @@ function renderSettingsTable(){
         }
         const id = fieldId(def.key);
         const $tr = $("<tr>");
+        // Label + help
         const $label = $("<label>").attr("for", id).addClass("mb-0").text(def.label || def.key);
-        const $left = $("<td>").append($label);
+
+        // Small “?” button with tooltip (right of label)
+        const tipText = TOOLTIP_TEXT[def.key] || "No description available yet.";
+        const $helpBtn = $("<button>")
+            .attr({ type: "button", "aria-label": "Help" })
+            .addClass("btn btn-outline-secondary btn-sm ms-2 p-0 lh-1 setting-help")
+            .html('<i class="bi bi-question-circle"></i>')
+            .attr({
+                "data-bs-toggle": "tooltip",
+                "data-bs-placement": "right",
+                "title": tipText
+            });
+
+        const $left = $("<td>").append($label, $helpBtn);
         const $right = $("<td>");
 
         if(def.type === "boolean"){
@@ -98,6 +155,7 @@ function renderSettingsTable(){
         $tr.append($left, $right);
         $tb.append($tr);
     });
+    initTooltips();
 }
 
 /************* Data binding *************/
