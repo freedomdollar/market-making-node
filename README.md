@@ -234,6 +234,18 @@ sudo systemctl enable docker
 
 ---
 
+## Updating
+
+To update the bot, run updaterelease.sh or do the following in the terminal:~~~~
+
+```bash
+git fetch --tags
+latestTag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+git checkout $latestTag
+docker-compose build
+docker-compose down ; docker-compose up -d
+```
+
 ## Additional Notes
 
 - If you get "KeyError: 'ContainerConfig'", try to run docker-compose down
