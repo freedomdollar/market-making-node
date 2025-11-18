@@ -1,635 +1,1504 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>fUSD Market Maker</title>
 
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
     <!-- Inter font -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin="crossorigin"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-    <!-- Theme CSS (kept from your page, with layout additions for topbar & sidebar) -->
+    <!-- Updated dashboard theme -->
     <style>
-        /* --- Existing theme (unchanged) --- */
-        :root {
-            --main-bg-color: #0c0c3a; --font-main-color: #fff; --font-dimmed-color: #8d95ae; --delimiter-color: hsla(0, 0%, 100%, .1);
-            --window-bg-color: #0f2055; --dropdown-bg-color: #11316b; --dropdown-bg-hover: #1d3b72; --profile-widget-avatar: #11316b;
-            --window-border-color: hsla(0, 0%, 100%, .3); --bordered-input-bg: hsla(0, 0%, 100%, .1); --row-header-bg: #154d91;
-            --button-bordered-hover: hsla(0, 0%, 100%, .1); --alert-bg: #233467; --switch-bg-color: #0f2055; --switch-bg-hover: #273666;
-            --dimmed-btn-bg: hsla(0, 0%, 100%, .1); --dimmed-btn-hover: hsla(0, 0%, 100%, .3); --font-faded-color: hsla(0, 0%, 100%, .5);
-            --slider-bg-color: #1d3b72; --blur-color: hsla(0, 0%, 100%, .05); --icon-bg-color: #0f1f54; --swap-btn-bg: rgba(31, 143, 235, .1);
-            --advices-bg-color: hsla(0, 0%, 100%, .1); --messenger-top-bg: #0f2055; --messenger-bottom-bg: #273666; --messenger-bg: #0f2055;
-            --messenger-border: hsla(0, 0%, 100%, .1); --message-bg: hsla(0, 0%, 100%, .1); --custom-message-bg: transparent;
-            --trade-table-tooltip: #1d3b72; --dex-offer-notification: #0f2055; --dex-panel-bg: #0f2055; --dex-panel-tooltip: #273666;
-            --dex-buy-sell-border: #ffffff1a; --dex-input-currency: #39497c; --footer-selected-link: #ffffffcc; --table-th-color: #ffffffb2;
-            --table-thead-bg: #24244e; --table-tbody-bg: #101040; --admin-table-border-color: #596f98;
-            --buy-color: #16d1d6; --sell-color: #ff6767; --link-color: #1f8feb; --link-hover-color: #4ca5ef;
-            --bs-primary-rgb: 31, 143, 235; --bs-primary: var(--link-color);
-        }
-        *, *::before, *::after { padding: 0; margin: 0; border: none; outline: none; box-sizing: border-box; transition: all .3s; background-clip: border-box; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
-        body { background-color: var(--main-bg-color); color: #FFF; font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.6; padding-top: 0 !important; }
-        .container, .container-fluid { max-width: 1800px; padding: 40px 20px 80px; }
-        @media screen and (min-width: 1200px) { .container, .container-fluid { padding: 40px 60px 80px; } }
-        p { color: var(--font-main-color); margin-bottom: 0.5rem; } a { color: var(--link-color); text-decoration: none; } a:hover { color: var(--link-hover-color); text-decoration: underline; }
-        h1, h2, h3, h4, h5, h6 { color: var(--font-main-color); font-weight: 600; margin-top: 0; margin-bottom: 1rem; }
-        h1 { font-size: 2.5rem; } h2 { font-size: 2rem; } h3 { font-size: 1.75rem; } h4 { font-size: 1.5rem; } h5 { font-size: 1.25rem; } h6 { font-size: 1rem; }
-        .text-muted { color: var(--font-dimmed-color) !important; }
-        .card { color: #FFF; background-color: var(--window-bg-color); border: 1px solid var(--window-border-color); border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); position: relative; }
-        .card-header { background-color: transparent; border-bottom: 1px solid var(--delimiter-color); color: var(--font-main-color); font-weight: 600; font-size: 1.1em; padding: 1rem 1.5rem; border-top-left-radius: 15px; border-top-right-radius: 15px; }
-        .card-body { padding: 1.5rem; } .card-body.p-0 { padding: 0 !important; } .card-body.p-0 .table { margin-bottom: 0; }
-        .card-footer { background-color: transparent; border-top: 1px solid var(--delimiter-color); padding: 1rem 1.5rem; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; }
-        .table { --bs-table-bg: transparent; --bs-table-border-color: var(--delimiter-color); --bs-table-striped-bg: rgba(255, 255, 255, 0.03); --bs-table-hover-bg: var(--dropdown-bg-hover); color: var(--font-main-color); border-collapse: separate; border-spacing: 0; margin-bottom: 1rem; }
-        .table th, .table td { padding: 0.8rem 1rem; vertical-align: middle; font-size: 0.95em; border-bottom: 1px solid var(--delimiter-color); border-top: 0; }
-        .table td { background-color: var(--table-tbody-bg); color: var(--font-main-color); }
-        .table thead th { color: var(--table-th-color); background-color: var(--table-thead-bg); font-weight: 600; border-bottom-width: 1px; border-top: 0; }
-        .table>:not(:first-child) { border-top: 0; }
-        .table thead th:first-child { border-top-left-radius: 8px; } .table thead th:last-child { border-top-right-radius: 8px; }
-        .table tbody tr:last-child td:first-child { border-bottom-left-radius: 8px; } .table tbody tr:last-child td:last-child { border-bottom-right-radius: 8px; }
-        .table-hover tbody tr:hover td { background-color: var(--dropdown-bg-hover); }
-        .table-striped tbody tr:nth-of-type(odd) td { background-color: var(--bs-table-striped-bg); }
-        .badge { padding: 0.3em 0.6em; font-size: 0.8em; font-weight: 700; border-radius: 5px; --bs-badge-bg: var(--dimmed-btn-bg); color: var(--font-main-color); border: 1px solid transparent; }
-        .badge.bg-success { color: var(--buy-color); border-color: var(--buy-color); background-color: transparent !important; }
-        .badge.bg-danger  { color: var(--sell-color); border-color: var(--sell-color); background-color: transparent !important; }
-        .badge.bg-primary { color: var(--link-color); border-color: var(--link-color); background-color: transparent !important; }
-        .badge.bg-secondary { color: var(--font-dimmed-color); border-color: var(--font-dimmed-color); background-color: transparent !important; }
-        .text-success { color: var(--buy-color) !important; } .text-danger { color: var(--sell-color) !important; }
-        .table-responsive { scrollbar-width: thin; scrollbar-color: #a0adc4 var(--window-bg-color); }
-        .table-responsive::-webkit-scrollbar { width: 6px; height: 6px; background-color: hsla(0, 0%, 100%, .1); border-radius: 3px; }
-        .table-responsive::-webkit-scrollbar-thumb { background-clip: content-box; border-radius: 3px; background-color: #a0adc4; }
-        .table-responsive::-webkit-scrollbar-track { background: hsla(0, 0%, 100%, .1); border-radius: 3px; }
-        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .status-ok { background-color: var(--buy-color); } .status-error { background-color: var(--sell-color); }
-        #last-updated { font-size: 0.8em; color: var(--font-dimmed-color); }
-        .card.is-disabled { opacity: .5; filter: grayscale(25%); pointer-events: none; }
-        .card .card-overlay {
-            z-index: 1000;
-            font-size: 42px;
-            color: #FFF !important;
-            text-shadow: 2px 2px 6px black;
-            text-shadow: 3px 3px 5px #000;
-            position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
-            background: rgba(0,0,0,.15); border-radius: 15px; font-weight: 600; color: var(--font-dimmed-color);
-            text-align: center; padding: .75rem;
-        }
-        .card.is-disabled .card-overlay { display: flex; }
-        input.address { background-color: #0f2055; color: #FFF; }
+      :root {
+        --color-background: #070d1d;
+        --color-surface: rgba(12, 23, 45, 0.96);
+        --color-surface-elevated: rgba(18, 33, 60, 0.9);
+        --color-border: rgba(255, 255, 255, 0.08);
+        --color-border-strong: rgba(255, 255, 255, 0.14);
+        --color-text: #f8fbff;
+        --color-text-muted: #94a6cb;
+        --color-text-soft: #6d7ba0;
+        --color-accent: #4f9cff;
+        --color-accent-soft: rgba(79, 156, 255, 0.14);
+        --color-success: #2ed3b7;
+        --color-danger: #f97070;
+        --color-warning: #f5c97a;
+        --sidebar-width: 260px;
+        --sidebar-collapsed-width: 82px;
+        --topbar-height: 64px;
+        --card-radius: 16px;
+        --shadow-soft: 0 20px 55px rgba(5, 12, 28, 0.35);
+        --bs-body-color: var(--color-text);
+        --bs-body-bg: transparent;
+        --bs-primary: var(--color-accent);
+        --bs-primary-rgb: 79, 156, 255;
+        --font-main-color: var(--color-text);
+        --alert-bg: rgba(255, 255, 255, 0.04);
+        --window-border-color: var(--color-border);
+        --window-bg-color: var(--color-surface);
+        --dropdown-bg-hover: rgba(79, 156, 255, 0.16);
+        --bordered-input-bg: rgba(255, 255, 255, 0.05);
+        --link-color: var(--color-accent);
+        --link-hover-color: #7bb0ff;
+      }
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: radial-gradient(
+          160% 120% at 50% 12%,
+          #162c55 0%,
+          #070d1d 55%,
+          #060a1a 100%
+        );
+        color: var(--color-text);
+        font-family: 'Inter', sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        min-height: 100vh;
+        padding-top: var(--topbar-height) !important;
+      }
+      ::selection {
+        background: rgba(79, 156, 255, 0.45);
+        color: #fff;
+      }
+      a {
+        color: var(--color-accent);
+        text-decoration: none;
+      }
+      a:hover {
+        color: #7bb0ff;
+      }
 
-        /* --- Layout additions: top bar + left sidebar --- */
-        :root {
-            --sidebar-width: 260px;
-            --sidebar-collapsed-width: 76px;
-            --topbar-height: 64px;
+      label {
+        color: var(--color-text);
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-weight: 600;
+        color: var(--color-text);
+      }
+      p {
+        color: var(--color-text);
+        margin-bottom: 0.65rem;
+      }
+      small,
+      .text-muted {
+        color: var(--color-text-muted) !important;
+      }
+      .container,
+      .container-fluid {
+        max-width: 1720px;
+        padding: 48px 24px 96px;
+      }
+      @media (min-width: 1200px) {
+        .container,
+        .container-fluid {
+          padding: 56px 48px 96px;
         }
-        /* override earlier padding-top for sticky topbar */
-        body { padding-top: var(--topbar-height) !important; }
+      }
 
-        .topbar {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: var(--topbar-height);
-            display: flex; align-items: center;
-            background: var(--messenger-top-bg);
-            border-bottom: 1px solid var(--window-border-color);
-            z-index: 1030;
-            padding: 0 .75rem;
-        }
-        .topbar .navbar-brand { color: #fff; font-weight: 700; display: flex; align-items: center; gap: .5rem; text-decoration: none; }
-        .topbar .form-control { background: var(--bordered-input-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color); }
-        .topbar .btn-outline-secondary { color: var(--font-main-color); border-color: var(--window-border-color); }
-        .topbar .btn-outline-secondary:hover { background: var(--dimmed-btn-bg); }
+      /* Cards */
+      .card {
+        position: relative;
+        color: var(--color-text);
+        background: linear-gradient(
+          145deg,
+          var(--color-surface),
+          var(--color-surface-elevated)
+        );
+        border: 1px solid var(--color-border);
+        border-radius: var(--card-radius);
+        box-shadow: var(--shadow-soft);
+        backdrop-filter: blur(22px);
+      }
+      .card-header {
+        background: transparent;
+        border-bottom: 1px solid var(--color-border-strong);
+        font-weight: 600;
+        padding: 1.25rem 1.5rem;
+      }
+      .card-header span:first-child {
+        color: var(--color-text);
+      }
+      .card-body {
+        padding: 1.5rem;
+      }
+      .card-footer {
+        background: rgba(6, 14, 30, 0.65);
+        border-top: 1px solid var(--color-border-strong);
+        padding: 1rem 1.5rem;
+      }
+      .card-body.p-0 {
+        padding: 0 !important;
+      }
+      .card-body.p-0 .table {
+        margin-bottom: 0;
+        border-radius: inherit;
+      }
 
+      /* Overlay state */
+      .card.is-disabled {
+        opacity: 0.6;
+      }
+      .card .card-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        backdrop-filter: blur(6px);
+        background: rgba(7, 16, 35, 0.72);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 1.25rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+      }
+      .card.is-disabled .card-overlay {
+        display: flex;
+      }
+
+      /* Tables */
+      .table {
+        --bs-table-bg: transparent;
+        --bs-table-border-color: var(--color-border);
+        --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+        --bs-table-hover-bg: rgba(79, 156, 255, 0.08);
+        margin-bottom: 0;
+        color: var(--color-text);
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+      .table th,
+      .table td {
+        border-top: 0;
+        border-bottom: 1px solid var(--color-border);
+        padding: 0.85rem 1rem;
+        vertical-align: middle;
+        font-size: 0.95rem;
+        background: transparent;
+        color: var(--color-text);
+      }
+      .table thead th {
+        font-size: 0.86rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--color-text-soft);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .table thead th:first-child {
+        border-top-left-radius: 10px;
+      }
+      .table thead th:last-child {
+        border-top-right-radius: 10px;
+      }
+      .table tbody tr:last-child td:first-child {
+        border-bottom-left-radius: 10px;
+      }
+      .table tbody tr:last-child td:last-child {
+        border-bottom-right-radius: 10px;
+      }
+      .table-hover tbody tr:hover td {
+        background: rgba(79, 156, 255, 0.06);
+      }
+
+      .table-responsive {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(170, 190, 228, 0.6) transparent;
+      }
+      .table-responsive::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+      }
+      .table-responsive::-webkit-scrollbar-thumb {
+        border-radius: 3px;
+        background: rgba(170, 190, 228, 0.7);
+      }
+
+      /* Badges & status */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35em 0.75em;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        border: 1px solid transparent;
+        background: var(--color-accent-soft);
+        color: var(--color-accent);
+        font-weight: 600;
+      }
+      .badge.bg-secondary {
+        background: rgba(148, 166, 203, 0.16) !important;
+        color: var(--color-text-muted) !important;
+      }
+      .badge.bg-success {
+        background: rgba(46, 211, 183, 0.18) !important;
+        color: var(--color-success) !important;
+      }
+      .badge.bg-danger {
+        background: rgba(249, 112, 112, 0.18) !important;
+        color: var(--color-danger) !important;
+      }
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--color-danger);
+        box-shadow: 0 0 0 4px rgba(249, 112, 112, 0.15);
+      }
+      .status-ok {
+        background: var(--color-success);
+        box-shadow: 0 0 0 4px rgba(46, 211, 183, 0.2);
+      }
+      #last-updated {
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
+      }
+
+      /* Buttons */
+      .btn {
+        border-radius: 12px;
+        font-weight: 600;
+      }
+      .btn-sm {
+        border-radius: 10px;
+      }
+      .btn-primary {
+        background: linear-gradient(120deg, #4f9cff, #6fa8ff);
+        border: none;
+        color: #081125;
+      }
+      .btn-primary:hover,
+      .btn-primary:focus {
+        background: linear-gradient(120deg, #6fa8ff, #90bbff);
+        color: #041028;
+      }
+      .btn-outline-secondary {
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .btn-outline-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--color-text);
+      }
+      .btn-outline-danger {
+        border-color: rgba(249, 112, 112, 0.6);
+        color: var(--color-danger);
+      }
+      .btn-outline-danger:hover {
+        background: rgba(249, 112, 112, 0.16);
+        color: var(--color-danger);
+      }
+
+      /* Inputs */
+      .form-label {
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-text-soft);
+      }
+      .form-control,
+      .form-select {
+        background: rgba(12, 23, 45, 0.65);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        border-radius: 12px;
+      }
+      .form-control::placeholder,
+      .form-select::placeholder {
+        color: var(--color-text-soft);
+        opacity: 1;
+      }
+      .form-control:focus,
+      .form-select:focus {
+        border-color: rgba(79, 156, 255, 0.65);
+        box-shadow: 0 0 0 0.25rem rgba(79, 156, 255, 0.16);
+        background: rgba(12, 23, 45, 0.8);
+      }
+      .input-group-text {
+        background: rgba(12, 23, 45, 0.5);
+        border: 1px solid var(--color-border);
+        color: var(--color-text-soft);
+      }
+      input.address {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+          'Liberation Mono', monospace;
+      }
+      .address-group .btn-outline-secondary {
+        border-left: none;
+      }
+
+      /* Alerts */
+      .alert {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--color-text);
+      }
+
+      /* Progress */
+      .progress {
+        height: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progress-bar {
+        background: linear-gradient(120deg, #4f9cff, #2ed3b7);
+        border-radius: 999px;
+      }
+
+      /* Top bar */
+      .topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--topbar-height);
+        display: flex;
+        align-items: center;
+        background: rgba(10, 19, 39, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--color-border);
+        z-index: 1030;
+        padding: 0 1rem;
+      }
+      .topbar .navbar-brand {
+        color: var(--color-text);
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.75rem;
+        letter-spacing: 0.01em;
+      }
+      .topbar .navbar-brand img {
+        height: 28px;
+        width: auto;
+        display: block;
+      }
+      .topbar .btn-outline-secondary {
+        border-radius: 12px;
+      }
+      #pnl-topbar .badge {
+        font-size: 0.8rem;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        position: fixed;
+        top: var(--topbar-height);
+        left: 0;
+        bottom: 0;
+        width: var(--sidebar-width);
+        background: rgba(12, 22, 44, 0.92);
+        backdrop-filter: blur(18px);
+        border-right: 1px solid var(--color-border);
+        padding: 1.25rem 0.85rem;
+        overflow-y: auto;
+        z-index: 1020;
+        transform: translateX(0);
+        transition: transform 0.24s ease, width 0.24s ease;
+      }
+      .sidebar .nav-section-title {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--color-text-muted);
+        padding: 0.75rem 1rem 0.3rem;
+      }
+      .sidebar .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.7rem 1rem;
+        border-radius: 12px;
+        color: var(--color-text);
+        font-weight: 600;
+      }
+      .sidebar .nav-link .bi {
+        font-size: 1.15rem;
+        color: var(--color-text-muted);
+      }
+      .sidebar .nav-link:hover {
+        background: rgba(79, 156, 255, 0.1);
+        text-decoration: none;
+      }
+      .sidebar .nav-link.active {
+        background: rgba(79, 156, 255, 0.18);
+        border: 1px solid rgba(79, 156, 255, 0.25);
+        box-shadow: 0 12px 30px rgba(79, 156, 255, 0.18);
+      }
+      .sidebar .nav-link.active .bi {
+        color: var(--color-accent);
+      }
+
+      .content {
+        margin-left: var(--sidebar-width);
+        transition: margin-left 0.25s ease;
+      }
+
+      @media (max-width: 991.98px) {
         .sidebar {
-            position: fixed; top: var(--topbar-height); left: 0; bottom: 0;
-            width: var(--sidebar-width);
-            background: var(--window-bg-color);
-            border-right: 1px solid var(--window-border-color);
-            padding: .75rem .5rem;
-            overflow-y: auto; z-index: 1020;
-            transform: translateX(0);
-            transition: transform .25s ease, width .25s ease;
+          transform: translateX(-100%);
         }
-        .sidebar .nav-section-title {
-            font-size: .75rem; text-transform: uppercase; letter-spacing: .04em;
-            color: var(--font-dimmed-color);
-            padding: .5rem .75rem; margin-top: .25rem;
+        .sidebar.show {
+          transform: translateX(0);
         }
-        .sidebar .nav-link {
-            display: flex; align-items: center; gap: .75rem;
-            color: var(--font-main-color);
-            padding: .6rem .75rem; border-radius: .5rem; font-weight: 600;
+        .content {
+          margin-left: 0;
         }
-        .sidebar .nav-link:hover { background: var(--dropdown-bg-hover); text-decoration: none; }
-        .sidebar .nav-link.active { background: var(--dimmed-btn-bg); border: 1px solid var(--window-border-color); }
-        .sidebar .nav-link .bi { font-size: 1.1rem; }
+      }
 
-        .content { margin-left: var(--sidebar-width); }
+      body.sidebar-collapsed .sidebar {
+        width: var(--sidebar-collapsed-width);
+      }
+      body.sidebar-collapsed .content {
+        margin-left: var(--sidebar-collapsed-width);
+      }
+      body.sidebar-collapsed .sidebar .label {
+        display: none;
+      }
+      body.sidebar-collapsed .sidebar .nav-link {
+        justify-content: center;
+        padding: 0.65rem 0;
+      }
+      body.sidebar-collapsed .sidebar .nav-link .bi {
+        margin: 0;
+      }
 
-        /* mobile: slide-in sidebar */
-        @media (max-width: 991.98px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.show { transform: translateX(0); }
-            .content { margin-left: 0; }
-        }
+      #sidebar-backdrop {
+        position: fixed;
+        inset: var(--topbar-height) 0 0 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 1015;
+        display: none;
+      }
+      #sidebar-backdrop.show {
+        display: block;
+      }
 
-        /* desktop collapsed rail */
-        body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed-width); }
-        body.sidebar-collapsed .content { margin-left: var(--sidebar-collapsed-width); }
-        body.sidebar-collapsed .sidebar .label { display: none; }
-        body.sidebar-collapsed .sidebar .nav-link { justify-content: center; }
+      .sidebar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(170, 190, 228, 0.55);
+        border-radius: 3px;
+      }
+      .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+      }
 
-        /* mobile backdrop for sidebar */
-        #sidebar-backdrop {
-            position: fixed; inset: var(--topbar-height) 0 0 0;
-            background: rgba(0,0,0,.5); z-index: 1015; display: none;
-        }
-        #sidebar-backdrop.show { display: block; }
-
-        /* Optional scrollbar style for sidebar */
-        .sidebar::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-thumb { background-color: #a0adc4; border-radius: 3px; }
-        .sidebar::-webkit-scrollbar-track { background: hsla(0, 0%, 100%, .05); }
+      /* Misc */
+      #qrcode {
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .address-group .input-group-text img {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+      }
+      hr {
+        border-color: rgba(255, 255, 255, 0.08);
+        opacity: 1;
+      }
+      .compact-card .card-header {
+        padding: 1rem 1.25rem;
+      }
+      .compact-card .card-body {
+        padding: 1.25rem;
+      }
+      .row-stretch > [class*='col-'] {
+        display: flex;
+      }
+      .row-stretch > [class*='col-'] > .card {
+        flex: 1 1 auto;
+      }
+      .panel-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+      .collapsible-card .card-header {
+        padding: 0;
+        border-bottom: 1px solid var(--color-border-strong);
+      }
+      .panel-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem 1.5rem;
+        background: transparent;
+        border: none;
+        color: var(--color-text);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .panel-toggle:focus-visible {
+        outline: 2px solid rgba(79, 156, 255, 0.6);
+        outline-offset: 2px;
+      }
+      .panel-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .panel-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--color-text-muted);
+      }
+      .panel-toggle .badge {
+        pointer-events: none;
+      }
+      .panel-toggle-icon {
+        font-size: 1rem;
+        color: var(--color-text-muted);
+        transition: transform 0.2s ease;
+      }
+      .panel-toggle[aria-expanded='true'] .panel-toggle-icon {
+        transform: rotate(0deg);
+      }
+      .panel-toggle[aria-expanded='false'] .panel-toggle-icon {
+        transform: rotate(180deg);
+      }
+      .panel-content > .card-body {
+        padding: 1.25rem 1.5rem;
+      }
+      .panel-content > .card-body.p-0 {
+        padding: 0;
+      }
+      .panel-content > .card-footer {
+        background: transparent;
+        border-top: 1px solid var(--color-border);
+        padding: 1rem 1.5rem;
+      }
+      .token-icon {
+        width: 18px;
+        height: 18px;
+        display: block;
+        filter: drop-shadow(0 2px 6px rgba(4, 14, 35, 0.5));
+      }
+      .token-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(79, 156, 255, 0.12);
+        border: 1px solid rgba(79, 156, 255, 0.18);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+      .token-chip--alternate {
+        background: rgba(46, 211, 183, 0.16);
+        border-color: rgba(46, 211, 183, 0.22);
+      }
+      .token-chip img {
+        width: 16px;
+        height: 16px;
+        display: block;
+      }
     </style>
-    <style>
-        .address-group .input-group-text img { display:inline-block; width:16px; height:16px; }
-        input.address { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-    </style>
-</head>
-<body>
-
-<!-- Top bar -->
-<nav class="topbar">
-    <button class="btn btn-outline-secondary me-2" id="btn-toggle-sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">
+  </head>
+  <body>
+    <!-- Top bar -->
+    <nav class="topbar">
+      <button
+        class="btn btn-outline-secondary me-2"
+        id="btn-toggle-sidebar"
+        aria-controls="sidebar"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
         <i class="bi bi-list"></i>
-    </button>
-    <a class="navbar-brand me-3" href="/">
-        <i class="bi bi-hexagon"></i> fUSD Market Maker
-    </a>
+      </button>
+      <a class="navbar-brand me-3" href="/">
+        <img
+          src="https://www.freedomdollar.com/brand/SVG/wordmark-light.svg"
+          alt="fUSD Market Maker wordmark"
+        />
+      </a>
 
-    <div id="pnl-topbar" class="ms-auto me-3 d-flex align-items-center gap-2">
-        <span id="pnl-badge"
-              class="badge rounded-pill bg-secondary"
-              data-bs-toggle="tooltip"
-              data-bs-title="Realized PnL over the current period">
-            PnL: —
+      <div id="pnl-topbar" class="ms-auto me-3 d-flex align-items-center gap-2">
+        <span
+          id="pnl-badge"
+          class="badge rounded-pill bg-secondary"
+          data-bs-toggle="tooltip"
+          data-bs-title="Realized PnL over the current period"
+        >
+          PnL: —
         </span>
-        <small id="pnl-breakdown" class="text-muted d-none d-md-inline">—</small>
-    </div>
+        <small id="pnl-breakdown" class="text-muted d-none d-md-inline"
+          >—</small
+        >
+      </div>
 
-    <form class="d-none d-md-flex ms-auto me-3" role="search" autocomplete="off" style="display: none;">
-        <input class="form-control form-control-sm" type="search" placeholder="Search…" aria-label="Search" style="display: none;" />
-    </form>
+      <form
+        class="d-none d-md-flex ms-auto me-3"
+        role="search"
+        autocomplete="off"
+        style="display: none"
+      >
+        <input
+          class="form-control form-control-sm"
+          type="search"
+          placeholder="Search…"
+          aria-label="Search"
+          style="display: none"
+        />
+      </form>
 
-    <div class="dropdown">
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-person-circle"></i><span class="d-none d-md-inline">Admin</span>
+      <div class="dropdown">
+        <button
+          class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          <i class="bi bi-person-circle"></i
+          ><span class="d-none d-md-inline">Admin</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
-            <li><h6 class="dropdown-header">Account</h6></li>
-            <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i>Sign out</a></li>
+          <li><h6 class="dropdown-header">Account</h6></li>
+          <li>
+            <a class="dropdown-item" href="/settings"
+              ><i class="bi bi-gear me-2"></i>Settings</a
+            >
+          </li>
+          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <a class="dropdown-item" href="#"
+              ><i class="bi bi-box-arrow-right me-2"></i>Sign out</a
+            >
+          </li>
         </ul>
-    </div>
-</nav>
-
-<!-- Sidebar + mobile backdrop -->
-<div id="sidebar-backdrop" aria-hidden="true"></div>
-<aside class="sidebar" id="sidebar" aria-label="Sidebar">
-    <div class="nav-section-title">Main</div>
-    <nav class="nav flex-column">
-        <a class="nav-link active" href="/"><i class="bi bi-speedometer2"></i><span class="label">Dashboard</span></a>
-        <a class="nav-link" href="/settings"><i class="bi bi-gear"></i><span class="label">Settings</span></a>
-        <a class="nav-link" href="/transactions"><i class="bi bi-receipt"></i><span class="label">Transactions</span></a>
-        <a class="nav-link" href="/transfer-funds">
-            <i class="bi bi-arrow-left-right"></i><span class="label">Transfer funds</span>
-        </a>
-        <a class="nav-link" href="/setup-twofa"><i class="bi bi-shield-lock"></i><span class="label">Security & 2FA</span></a>
+      </div>
     </nav>
-</aside>
 
-<!-- Main content (your existing dashboard) -->
-<main class="content">
-    <div class="container-fluid">
+    <!-- Sidebar + mobile backdrop -->
+    <div id="sidebar-backdrop" aria-hidden="true"></div>
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+      <div class="nav-section-title">Main</div>
+      <nav class="nav flex-column">
+        <a class="nav-link active" href="/"
+          ><i class="bi bi-speedometer2"></i
+          ><span class="label">Dashboard</span></a
+        >
+        <a class="nav-link" href="/settings"
+          ><i class="bi bi-gear"></i><span class="label">Settings</span></a
+        >
+        <a class="nav-link" href="/transactions"
+          ><i class="bi bi-receipt"></i
+          ><span class="label">Transactions</span></a
+        >
+        <a class="nav-link" href="/transfer-funds">
+          <i class="bi bi-arrow-left-right"></i
+          ><span class="label">Transfer funds</span>
+        </a>
+        <a class="nav-link" href="/setup-twofa"
+          ><i class="bi bi-shield-lock"></i
+          ><span class="label">Security & 2FA</span></a
+        >
+      </nav>
+    </aside>
+
+    <!-- Main content (your existing dashboard) -->
+    <main class="content">
+      <div class="container-fluid">
         <div class="row g-4">
-
-            <!-- Sync card -->
-            <div class="col-6">
-                <div class="card" id="sync-card">
-                    <div class="card-overlay">Zano daemon is initializing…</div>
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <span id="status-dot" class="status-dot status-error"></span>
-                            <span>Zano Network Sync</span>
-                            <span id="network-state" class="badge bg-secondary ms-2">Checking…</span>
-                        </div>
-                        <small id="last-updated" class="text-muted">Last updated: —</small>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2">
-                            <strong id="sync-current">—</strong> of <strong id="sync-max">—</strong>
-                            (<strong id="sync-percent">—%</strong>)
-                        </p>
-                        <div class="progress" role="progressbar" aria-label="Zano chain sync progress"
-                             aria-valuemin="0" aria-valuemax="100"
-                             style="height: 12px; background-color: var(--bordered-input-bg);">
-                            <div id="sync-bar" class="progress-bar" style="width: 0%; background-color: var(--link-color);"></div>
-                        </div>
-                        <small class="text-muted d-block mt-2" id="blocks-behind">—</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Application Status -->
-            <div class="col-3">
-                <div class="card" id="appstatus-card">
-                    <div class="card-header">Application Status</div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-3">
-                            <li class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Wallet service</span>
-                                <span id="appstat-wallet" class="fw-semibold">
-                                <i class="bi bi-dash-circle text-muted"></i> —
-                            </span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center mb-2">
-                                <span>DEX trading service</span>
-                                <span id="appstat-dex" class="fw-semibold">
-                                <i class="bi bi-dash-circle text-muted"></i> —
-                            </span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center">
-                                <span>CEX trading service</span>
-                                <span id="appstat-cex" class="fw-semibold">
-                                <i class="bi bi-dash-circle text-muted"></i> —
-                            </span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center">
-                                <span>Telegram bot service</span>
-                                <span id="appstat-telegram" class="fw-semibold">
-                                <i class="bi bi-dash-circle text-muted"></i> —
-                            </span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center">
-                                <span>App latest version</span>
-                                <span id="appstat-version" class="fw-semibold">
-                                <i class="bi bi-dash-circle text-muted"></i> —
-                            </span>
-                            </li>
-                        </ul>
-
-                        <div id="appstatus-help" class="small text-muted">
-                            <!-- Guidance gets injected here -->
-                        </div>
-
-                        <hr>
-                        <a href="/settings" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-gear"></i> Open Settings
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MEXC status / balances -->
-            <div class="col-3">
-                <div class="card" id="mexc-card">
-                    <div class="card-overlay">CEX trading service not ready…</div>
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>MEXC status</span>
-                        <span id="mexc-status-badge" class="badge bg-secondary">Checking…</span>
-                    </div>
-                    <div class="card-body">
-                        <div id="mexc-alert" class="alert d-none" role="alert"
-                             style="background-color: var(--alert-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color);">
-                        </div>
-                        <div class="table-responsive" id="mexc-balances-wrapper">
-                            <table class="table align-middle mb-0">
-                                <thead><tr><th>Asset</th><th>Balance</th></tr></thead>
-                                <tbody id="mexc-balances-tbody">
-                                <tr><td class="text-muted">USDT</td><td class="text-muted">—</td></tr>
-                                <tr><td class="text-muted">fUSD</td><td class="text-muted">—</td></tr>
-                                <tr><td class="text-muted">ZANO</td><td class="text-muted">—</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <small id="mexc-help" class="text-muted d-block mt-2"></small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Wallet Status -->
-            <div class="col-8">
+          <div class="col-12 col-xxl-9">
+            <div class="row g-4 row-stretch">
+              <!-- Wallet Status -->
+              <div class="col-12">
                 <div class="card" id="wallet-card">
-                    <div class="card-overlay">Wallet service not ready…</div>
-                    <div class="card-header">Wallet Status</div>
-                    <div class="card-body">
-                        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-                            <div class="col-12">
-                                <label class="form-label form-label-sm mb-1">Wallet deposit address</label>
-                                <div class="input-group input-group-sm address-group" style="max-width: 640px;">
-                                <span class="input-group-text bg-transparent border-secondary" id="wallet-address-logo" title="ZANO">
-                                  <!-- Small inline SVG “Z” monogram as a default logo; swap src for your official asset anytime -->
-                                  <img alt="ZANO" width="16" height="16"
-                                       src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%2321d4fd'/%3E%3Cstop offset='1' stop-color='%231f8feb'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='url(%23g)'/%3E%3Ctext x='32' y='41' font-family='Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'%3EZ%3C/text%3E%3C/svg%3E">
-                                </span>
-                                    <input type="text" id="wallet-address-input" class="form-control address"
-                                           value="Loading..." readonly aria-label="Wallet deposit address">
-                                    <button class="btn btn-outline-secondary" type="button" id="btn-copy-address"
-                                            data-bs-toggle="tooltip" data-bs-title="Copy to clipboard">
-                                        <i class="bi bi-clipboard"></i>
-                                    </button>
-                                </div>
-                                <small id="address-help" class="text-muted d-block mt-1"></small>
-                            </div>
-                            <div id="qrcode" style="padding: 5px; background-color: #FFF;"></div>
-                            <p class="mb-0">
-                                <strong>Alias set:</strong> <span id="wallet-alias">n/a</span>
-                            </p>
-                            <div class="ms-auto w-100 w-sm-auto" style="max-width: 420px;">
-                                <div class="input-group input-group-sm" id="alias-form">
-                                    <input type="text" id="alias-input" class="form-control" placeholder="Set alias (e.g., your_alias)" autocapitalize="off" autocorrect="off" spellcheck="false">
-                                    <button class="btn btn-primary" id="alias-save-btn" type="button">Save</button>
-                                </div>
-                                <small id="alias-help" class="text-muted d-block mt-1"></small>
-                            </div>
+                  <div class="card-overlay">Wallet service not ready…</div>
+                  <div class="card-header">Wallet Status</div>
+                  <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                      <div class="col-12">
+                        <label class="form-label form-label-sm mb-1"
+                          >Wallet deposit address</label
+                        >
+                        <div
+                          class="input-group input-group-sm address-group"
+                          style="max-width: 640px"
+                        >
+                          <span
+                            class="input-group-text bg-transparent border-secondary"
+                            id="wallet-address-logo"
+                            title="ZANO"
+                          >
+                            <img
+                              src="https://zano.org/assets/icon-e865cc71.svg"
+                              alt="Zano logo"
+                              class="token-icon"
+                            />
+                          </span>
+                          <input
+                            type="text"
+                            id="wallet-address-input"
+                            class="form-control address"
+                            value="Loading..."
+                            readonly
+                            aria-label="Wallet deposit address"
+                          />
+                          <button
+                            class="btn btn-outline-secondary"
+                            type="button"
+                            id="btn-copy-address"
+                            data-bs-toggle="tooltip"
+                            data-bs-title="Copy to clipboard"
+                          >
+                            <i class="bi bi-clipboard"></i>
+                          </button>
                         </div>
-
-                        <div id="alias-alert" class="alert d-none" role="alert"
-                             style="background-color: var(--alert-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color);">
-                            You need to deposit ZANO to create an alias.
+                        <small
+                          id="address-help"
+                          class="text-muted d-block mt-1"
+                        ></small>
+                      </div>
+                      <div
+                        id="qrcode"
+                        style="padding: 5px; background-color: #fff"
+                      ></div>
+                      <p class="mb-0">
+                        <strong>Alias set:</strong>
+                        <span id="wallet-alias">n/a</span>
+                      </p>
+                      <div
+                        class="ms-auto w-100 w-sm-auto"
+                        style="max-width: 420px"
+                      >
+                        <div class="input-group input-group-sm" id="alias-form">
+                          <input
+                            type="text"
+                            id="alias-input"
+                            class="form-control"
+                            placeholder="Set alias (e.g., your_alias)"
+                            autocapitalize="off"
+                            autocorrect="off"
+                            spellcheck="false"
+                          />
+                          <button
+                            class="btn btn-primary"
+                            id="alias-save-btn"
+                            type="button"
+                          >
+                            Save
+                          </button>
                         </div>
-
-                        <div class="table-responsive mt-3">
-                            <table class="table align-middle mb-0">
-                                <thead>
-                                <tr>
-                                    <th>Asset Name</th>
-                                    <th>Total</th>
-                                    <th>Unlocked</th>
-                                    <th>Awaiting In</th>
-                                    <th>UTXOs</th>
-                                </tr>
-                                </thead>
-                                <tbody id="wallet-tbody">
-                                <tr>
-                                    <td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
+                        <small
+                          id="alias-help"
+                          class="text-muted d-block mt-1"
+                        ></small>
+                      </div>
                     </div>
+
+                    <div
+                      id="alias-alert"
+                      class="alert d-none"
+                      role="alert"
+                      style="
+                        background-color: var(--alert-bg);
+                        color: var(--font-main-color);
+                        border: 1px solid var(--window-border-color);
+                      "
+                    >
+                      You need to deposit ZANO to create an alias.
+                    </div>
+
+                    <div class="table-responsive mt-3">
+                      <table class="table align-middle mb-0">
+                        <thead>
+                          <tr>
+                            <th>Asset Name</th>
+                            <th>Total</th>
+                            <th>Unlocked</th>
+                            <th>Awaiting In</th>
+                            <th>UTXOs</th>
+                          </tr>
+                        </thead>
+                        <tbody id="wallet-tbody">
+                          <tr>
+                            <td class="text-muted">—</td>
+                            <td class="text-muted">—</td>
+                            <td class="text-muted">—</td>
+                            <td class="text-muted">—</td>
+                            <td class="text-muted">—</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
-            </div>
+              </div>
 
-            <!-- Key Metrics -->
-            <div class="col-4">
-                <div class="card" id="metrics-card">
-                    <div class="card-overlay">DEX trading service not ready…</div>
-                    <div class="card-header">Key Metrics</div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0">
-                                <thead><tr><th style="width: 320px;">Metric</th><th>Value</th></tr></thead>
-                                <tbody id="metrics-tbody">
-                                <tr><td class="text-muted">—</td><td class="text-muted">—</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <small id="metrics-help" class="text-muted"></small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Current Orders -->
-            <div class="col-9">
+              <!-- Current Orders -->
+              <div class="col-12">
                 <div class="card" id="orders-card">
-                    <div class="card-overlay">DEX trading service not ready…</div>
-                    <div class="card-header">Current Orders</div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0">
-                                <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Type</th>
-                                    <th>Amount</th>
-                                    <th>Price</th>
-                                    <th>Total</th>
-                                    <th>ZANO Price</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                </tr>
-                                </thead>
-                                <tbody id="orders-tbody">
-                                <tr><td class="text-muted" colspan="10">No orders</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                  <div class="card-overlay">DEX trading service not ready…</div>
+                  <div class="card-header">Current Orders</div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table class="table align-middle mb-0">
+                        <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                            <th>ZANO Price</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                          </tr>
+                        </thead>
+                        <tbody id="orders-tbody">
+                          <tr>
+                            <td class="text-muted" colspan="10">No orders</td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
-                    <div class="card-footer d-flex justify-content-between">
-                        <small class="text-muted">Showing active orders.</small>
-                        <small id="orders-count" class="text-muted">0</small>
-                    </div>
+                  </div>
+                  <div class="card-footer d-flex justify-content-between">
+                    <small class="text-muted">Showing active orders.</small>
+                    <small id="orders-count" class="text-muted">0</small>
+                  </div>
                 </div>
-            </div>
+              </div>
 
-            <!-- Bot Controls -->
-            <div class="col-3">
-                <div class="card" id="bot-card">
-                    <div class="card-header">Bot Controls</div>
-                    <div class="card-body">
-                        <div id="bot-alert" class="alert d-none" role="alert"
-                             style="background-color: var(--alert-bg); color: var(--font-main-color); border: 1px solid var(--window-border-color);">
-                            You need to have an alias and funds in the wallet to start it.
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button type="button" id="btn-start-bot" class="btn btn-primary" disabled>
-                                <i class="bi bi-play-fill"></i> Start bot
-                            </button>
-                            <button type="button" id="btn-stop-bot" class="btn btn-outline-danger">
-                                <i class="bi bi-stop-fill"></i> Stop bot
-                            </button>
-                        </div>
-                        <small id="bot-help" class="text-muted d-block mt-2"></small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Trades flow -->
-            <div class="col-12">
+              <!-- Trades flow -->
+              <div class="col-12">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center justify-content-between">
-                        <span>DEX ZANO → fUSD (you sell fUSD for ZANO) trades and subsequent exchange actions</span>
-                        <div class="d-flex align-items-center gap-2">
-                            <small id="trades-last-updated" class="text-muted">Last updated: —</small>
-                            <button id="refresh-btn" class="btn btn-sm btn-outline-secondary">Refresh</button>
-                        </div>
+                  <div
+                    class="card-header d-flex align-items-center justify-content-between"
+                  >
+                    <span>
+                      <span class="token-chip">
+                        <img
+                          src="https://zano.org/assets/icon-e865cc71.svg"
+                          alt="Zano logo"
+                        />
+                        ZANO
+                      </span>
+                      <span class="mx-1 text-muted">→</span>
+                      <span class="token-chip token-chip--alternate">
+                        <img
+                          src="https://www.freedomdollar.com/brand/SVG/logo-color.svg"
+                          alt="fUSD logo"
+                        />
+                        fUSD
+                      </span>
+                      <span class="text-muted ms-2"
+                        >(you sell fUSD for ZANO)</span
+                      >
+                      <span>trades and subsequent exchange actions</span>
+                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                      <small id="trades-last-updated" class="text-muted"
+                        >Last updated: —</small
+                      >
+                      <button
+                        id="refresh-btn"
+                        class="btn btn-sm btn-outline-secondary"
+                      >
+                        Refresh
+                      </button>
                     </div>
+                  </div>
 
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover align-middle mb-0">
-                                <thead>
-                                <tr>
-                                    <th rowspan="2" class="colsecr">Time (DEX)</th>
-                                    <th colspan="3" class="colsecr">DEX — ZANO → fUSD</th>
-                                    <th colspan="4" class="colsecr">MEXC — ZANO → USDT</th>
-                                    <th colspan="4">MEXC — USDT → fUSD</th>
-                                </tr>
-                                <tr>
-                                    <th>fUSD sold</th>
-                                    <th>ZANO received</th>
-                                    <th class="colsecr">ZANO price</th>
-                                    <th>ZANO to sell</th>
-                                    <th>Price</th>
-                                    <th>USDT received</th>
-                                    <th class="colsecr">Status</th>
-                                    <th>fUSD to buy</th>
-                                    <th>Price</th>
-                                    <th>USDT spent</th>
-                                    <th>Status / Time</th>
-                                </tr>
-                                </thead>
-                                <tbody id="trades-tbody">
-                                <tr><td class="text-muted" colspan="13">Loading…</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table
+                        class="table table-striped table-hover align-middle mb-0"
+                      >
+                        <thead>
+                          <tr>
+                            <th rowspan="2" class="colsecr">Time (DEX)</th>
+                            <th colspan="3" class="colsecr">
+                              DEX — ZANO → fUSD
+                            </th>
+                            <th colspan="4" class="colsecr">
+                              MEXC — ZANO → USDT
+                            </th>
+                            <th colspan="4">MEXC — USDT → fUSD</th>
+                          </tr>
+                          <tr>
+                            <th>fUSD sold</th>
+                            <th>ZANO received</th>
+                            <th class="colsecr">ZANO price</th>
+                            <th>ZANO to sell</th>
+                            <th>Price</th>
+                            <th>USDT received</th>
+                            <th class="colsecr">Status</th>
+                            <th>fUSD to buy</th>
+                            <th>Price</th>
+                            <th>USDT spent</th>
+                            <th>Status / Time</th>
+                          </tr>
+                        </thead>
+                        <tbody id="trades-tbody">
+                          <tr>
+                            <td class="text-muted" colspan="13">Loading…</td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
+                  </div>
 
-                    <div class="card-footer d-flex justify-content-between">
-                        <small id="rows-count" class="text-muted">0 rows</small>
-                        <small class="text-muted"><code></code></small>
-                    </div>
+                  <div class="card-footer d-flex justify-content-between">
+                    <small id="rows-count" class="text-muted">0 rows</small>
+                    <small class="text-muted"><code></code></small>
+                  </div>
                 </div>
-            </div>
+              </div>
 
-            <!-- Trades flow (buy) -->
-            <div class="col-12">
+              <!-- Trades flow (buy) -->
+              <div class="col-12">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center justify-content-between">
-                        <span>DEX fUSD→ZANO (you buy fUSD for ZANO) trades and subsequent exchange actions</span>
-                        <div class="d-flex align-items-center gap-2">
-                            <small id="last-updated-buy" class="text-muted">Last updated: —</small>
-                            <button id="refresh-btn-buy" class="btn btn-sm btn-outline-secondary">Refresh</button>
-                        </div>
+                  <div
+                    class="card-header d-flex align-items-center justify-content-between"
+                  >
+                    <span>
+                      <span class="token-chip token-chip--alternate">
+                        <img
+                          src="https://www.freedomdollar.com/brand/SVG/logo-color.svg"
+                          alt="fUSD logo"
+                        />
+                        fUSD
+                      </span>
+                      <span class="mx-1 text-muted">→</span>
+                      <span class="token-chip">
+                        <img
+                          src="https://zano.org/assets/icon-e865cc71.svg"
+                          alt="Zano logo"
+                        />
+                        ZANO
+                      </span>
+                      <span class="text-muted ms-2"
+                        >(you buy fUSD for ZANO)</span
+                      >
+                      <span>trades and subsequent exchange actions</span>
+                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                      <small id="last-updated-buy" class="text-muted"
+                        >Last updated: —</small
+                      >
+                      <button
+                        id="refresh-btn-buy"
+                        class="btn btn-sm btn-outline-secondary"
+                      >
+                        Refresh
+                      </button>
                     </div>
+                  </div>
 
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover align-middle mb-0">
-                                <thead>
-                                <tr>
-                                    <th rowspan="2" class="colsecr">Time (DEX)</th>
-                                    <th colspan="3" class="colsecr">DEX — fUSD → ZANO</th>
-                                    <th colspan="4" class="colsecr">MEXC — fUSD → USDT</th>
-                                    <th colspan="4">MEXC — USDT → ZANO</th>
-                                </tr>
-                                <tr>
-                                    <th>fUSD received</th>
-                                    <th>ZANO bought</th>
-                                    <th class="colsecr">ZANO price</th>
-                                    <th>fUSD to sell</th>
-                                    <th>Price</th>
-                                    <th>USDT received</th>
-                                    <th class="colsecr">Status</th>
-                                    <th>ZANO to buy</th>
-                                    <th>Price</th>
-                                    <th>USDT spent</th>
-                                    <th class="colsecr">Status / Time</th>
-                                </tr>
-                                </thead>
-                                <tbody id="trades-tbody-buy">
-                                <tr>
-                                    <td class="text-muted" colspan="13">Loading…</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table
+                        class="table table-striped table-hover align-middle mb-0"
+                      >
+                        <thead>
+                          <tr>
+                            <th rowspan="2" class="colsecr">Time (DEX)</th>
+                            <th colspan="3" class="colsecr">
+                              DEX — fUSD → ZANO
+                            </th>
+                            <th colspan="4" class="colsecr">
+                              MEXC — fUSD → USDT
+                            </th>
+                            <th colspan="4">MEXC — USDT → ZANO</th>
+                          </tr>
+                          <tr>
+                            <th>fUSD received</th>
+                            <th>ZANO bought</th>
+                            <th class="colsecr">ZANO price</th>
+                            <th>fUSD to sell</th>
+                            <th>Price</th>
+                            <th>USDT received</th>
+                            <th class="colsecr">Status</th>
+                            <th>ZANO to buy</th>
+                            <th>Price</th>
+                            <th>USDT spent</th>
+                            <th class="colsecr">Status / Time</th>
+                          </tr>
+                        </thead>
+                        <tbody id="trades-tbody-buy">
+                          <tr>
+                            <td class="text-muted" colspan="13">Loading…</td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
+                  </div>
 
-                    <div class="card-footer d-flex justify-content-between">
-                        <small id="rows-count-buy" class="text-muted">0 rows</small>
-                        <small class="text-muted"><code></code></small>
-                    </div>
+                  <div class="card-footer d-flex justify-content-between">
+                    <small id="rows-count-buy" class="text-muted">0 rows</small>
+                    <small class="text-muted"><code></code></small>
+                  </div>
                 </div>
+              </div>
             </div>
+          </div>
 
+          <div class="col-12 col-xxl-3">
+            <div class="panel-group" id="insight-panels">
+              <div class="card collapsible-card" id="sync-card">
+                <div class="card-header">
+                  <button
+                    class="panel-toggle collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#panel-sync"
+                    aria-expanded="false"
+                    aria-controls="panel-sync"
+                  >
+                    <span
+                      class="panel-title d-inline-flex align-items-center gap-2"
+                    >
+                      <img
+                        src="https://zano.org/assets/icon-e865cc71.svg"
+                        alt="Zano logo"
+                        class="token-icon"
+                      />
+                      Zano Network Sync
+                    </span>
+                    <span class="panel-meta">
+                      <span id="network-state" class="badge bg-secondary"
+                        >Checking…</span
+                      >
+                      <i class="bi bi-chevron-up panel-toggle-icon"></i>
+                    </span>
+                  </button>
+                </div>
+                <div class="card-overlay">Zano daemon is initializing…</div>
+                <div id="panel-sync" class="collapse panel-content">
+                  <div class="card-body">
+                    <div
+                      class="d-flex justify-content-between align-items-center mb-3"
+                    >
+                      <div class="d-flex align-items-center gap-2">
+                        <span
+                          id="status-dot"
+                          class="status-dot status-error"
+                        ></span>
+                        <span
+                          class="fw-semibold text-muted text-uppercase small"
+                          >Status</span
+                        >
+                      </div>
+                      <small id="last-updated" class="text-muted"
+                        >Last updated: —</small
+                      >
+                    </div>
+                    <p class="mb-2">
+                      <strong id="sync-current">—</strong> of
+                      <strong id="sync-max">—</strong>
+                      (<strong id="sync-percent">—%</strong>)
+                    </p>
+                    <div
+                      class="progress"
+                      role="progressbar"
+                      aria-label="Zano chain sync progress"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      style="
+                        height: 12px;
+                        background-color: var(--bordered-input-bg);
+                      "
+                    >
+                      <div
+                        id="sync-bar"
+                        class="progress-bar"
+                        style="width: 0%; background-color: var(--link-color)"
+                      ></div>
+                    </div>
+                    <small class="text-muted d-block mt-2" id="blocks-behind"
+                      >—</small
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="card collapsible-card" id="appstatus-card">
+                <div class="card-header">
+                  <button
+                    class="panel-toggle collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#panel-appstatus"
+                    aria-expanded="false"
+                    aria-controls="panel-appstatus"
+                  >
+                    <span class="panel-title">Application Status</span>
+                    <span class="panel-meta">
+                      <i class="bi bi-chevron-up panel-toggle-icon"></i>
+                    </span>
+                  </button>
+                </div>
+                <div id="panel-appstatus" class="collapse panel-content">
+                  <div class="card-body">
+                    <ul class="list-unstyled mb-3">
+                      <li
+                        class="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <span>Wallet service</span>
+                        <span id="appstat-wallet" class="fw-semibold">
+                          <i class="bi bi-dash-circle text-muted"></i> —
+                        </span>
+                      </li>
+                      <li
+                        class="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <span>DEX trading service</span>
+                        <span id="appstat-dex" class="fw-semibold">
+                          <i class="bi bi-dash-circle text-muted"></i> —
+                        </span>
+                      </li>
+                      <li
+                        class="d-flex justify-content-between align-items-center"
+                      >
+                        <span>CEX trading service</span>
+                        <span id="appstat-cex" class="fw-semibold">
+                          <i class="bi bi-dash-circle text-muted"></i> —
+                        </span>
+                      </li>
+                      <li
+                        class="d-flex justify-content-between align-items-center"
+                      >
+                        <span>Telegram bot service</span>
+                        <span id="appstat-telegram" class="fw-semibold">
+                          <i class="bi bi-dash-circle text-muted"></i> —
+                        </span>
+                      </li>
+                      <li
+                        class="d-flex justify-content-between align-items-center"
+                      >
+                        <span>App latest version</span>
+                        <span id="appstat-version" class="fw-semibold">
+                          <i class="bi bi-dash-circle text-muted"></i> —
+                        </span>
+                      </li>
+                    </ul>
+
+                    <div id="appstatus-help" class="small text-muted">
+                      <!-- Guidance gets injected here -->
+                    </div>
+
+                    <hr />
+                    <a href="/settings" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-gear"></i> Open Settings
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card collapsible-card" id="mexc-card">
+                <div class="card-header">
+                  <button
+                    class="panel-toggle collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#panel-mexc"
+                    aria-expanded="false"
+                    aria-controls="panel-mexc"
+                  >
+                    <span class="panel-title">MEXC status</span>
+                    <span class="panel-meta">
+                      <span id="mexc-status-badge" class="badge bg-secondary"
+                        >Checking…</span
+                      >
+                      <i class="bi bi-chevron-up panel-toggle-icon"></i>
+                    </span>
+                  </button>
+                </div>
+                <div class="card-overlay">CEX trading service not ready…</div>
+                <div id="panel-mexc" class="collapse panel-content">
+                  <div class="card-body">
+                    <div
+                      id="mexc-alert"
+                      class="alert d-none"
+                      role="alert"
+                      style="
+                        background-color: var(--alert-bg);
+                        color: var(--font-main-color);
+                        border: 1px solid var(--window-border-color);
+                      "
+                    ></div>
+                    <div class="table-responsive" id="mexc-balances-wrapper">
+                      <table class="table align-middle mb-0">
+                        <thead>
+                          <tr>
+                            <th>Asset</th>
+                            <th>Balance</th>
+                          </tr>
+                        </thead>
+                        <tbody id="mexc-balances-tbody">
+                          <tr>
+                            <td class="text-muted">USDT</td>
+                            <td class="text-muted">—</td>
+                          </tr>
+                          <tr>
+                            <td class="text-muted">fUSD</td>
+                            <td class="text-muted">—</td>
+                          </tr>
+                          <tr>
+                            <td class="text-muted">ZANO</td>
+                            <td class="text-muted">—</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <small
+                      id="mexc-help"
+                      class="text-muted d-block mt-2"
+                    ></small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card collapsible-card" id="metrics-card">
+                <div class="card-header">
+                  <button
+                    class="panel-toggle collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#panel-metrics"
+                    aria-expanded="false"
+                    aria-controls="panel-metrics"
+                  >
+                    <span class="panel-title">Key Metrics</span>
+                    <span class="panel-meta">
+                      <i class="bi bi-chevron-up panel-toggle-icon"></i>
+                    </span>
+                  </button>
+                </div>
+                <div class="card-overlay">DEX trading service not ready…</div>
+                <div id="panel-metrics" class="collapse panel-content">
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table class="table align-middle mb-0">
+                        <thead>
+                          <tr>
+                            <th style="width: 320px">Metric</th>
+                            <th>Value</th>
+                          </tr>
+                        </thead>
+                        <tbody id="metrics-tbody">
+                          <tr>
+                            <td class="text-muted">—</td>
+                            <td class="text-muted">—</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="card-footer">
+                    <small id="metrics-help" class="text-muted"></small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card collapsible-card" id="bot-card">
+                <div class="card-header">
+                  <button
+                    class="panel-toggle collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#panel-bot"
+                    aria-expanded="false"
+                    aria-controls="panel-bot"
+                  >
+                    <span class="panel-title">Bot Controls</span>
+                    <span class="panel-meta">
+                      <i class="bi bi-chevron-up panel-toggle-icon"></i>
+                    </span>
+                  </button>
+                </div>
+                <div id="panel-bot" class="collapse panel-content">
+                  <div class="card-body">
+                    <div
+                      id="bot-alert"
+                      class="alert d-none"
+                      role="alert"
+                      style="
+                        background-color: var(--alert-bg);
+                        color: var(--font-main-color);
+                        border: 1px solid var(--window-border-color);
+                      "
+                    >
+                      You need to have an alias and funds in the wallet to start
+                      it.
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        id="btn-start-bot"
+                        class="btn btn-primary"
+                        disabled
+                      >
+                        <i class="bi bi-play-fill"></i> Start bot
+                      </button>
+                      <button
+                        type="button"
+                        id="btn-stop-bot"
+                        class="btn btn-outline-danger"
+                      >
+                        <i class="bi bi-stop-fill"></i> Stop bot
+                      </button>
+                    </div>
+                    <small
+                      id="bot-help"
+                      class="text-muted d-block mt-2"
+                    ></small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
-</main>
+      </div>
+    </main>
 
-<!-- Daemon init modal -->
-<div class="modal fade" id="daemon-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="color: #000;">
-            <div class="modal-header"><h5 class="modal-title">Please wait</h5></div>
-            <div class="modal-body" id="daemon-modal-body">Zano daemon is initializing, please wait 5–20 minutes.</div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled>OK</button></div>
+    <!-- Daemon init modal -->
+    <div
+      class="modal fade"
+      id="daemon-modal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="color: #000">
+          <div class="modal-header">
+            <h5 class="modal-title">Please wait</h5>
+          </div>
+          <div class="modal-body" id="daemon-modal-body">
+            Zano daemon is initializing, please wait 5–20 minutes.
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+              disabled
+            >
+              OK
+            </button>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- jQuery / Bootstrap -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script src="/js/qrcode.js"></script>
-<script src="/js/app.js"></script>
-<script src="/js/pnl.js"></script>
+    <!-- jQuery / Bootstrap -->
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="/js/qrcode.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/pnl.js"></script>
 
-<!-- Sidebar & topbar behavior -->
-<script>
-    (function () {
-        const sidebar = document.getElementById('sidebar');
-        const backdrop = document.getElementById('sidebar-backdrop');
-        const toggleBtn = document.getElementById('btn-toggle-sidebar');
+    <!-- Sidebar & topbar behavior -->
+    <script>
+      ;(function () {
+        const sidebar = document.getElementById('sidebar')
+        const backdrop = document.getElementById('sidebar-backdrop')
+        const toggleBtn = document.getElementById('btn-toggle-sidebar')
 
-        const isMobile = () => window.innerWidth < 992;
+        const isMobile = () => window.innerWidth < 992
 
         // Toggle sidebar: slide-in on mobile, collapse on desktop
         toggleBtn?.addEventListener('click', function () {
-            if (isMobile()) {
-                const showing = sidebar.classList.toggle('show');
-                toggleBtn.setAttribute('aria-expanded', showing ? 'true' : 'false');
-                backdrop.classList.toggle('show', showing);
-            } else {
-                document.body.classList.toggle('sidebar-collapsed');
-            }
-        });
+          if (isMobile()) {
+            const showing = sidebar.classList.toggle('show')
+            toggleBtn.setAttribute('aria-expanded', showing ? 'true' : 'false')
+            backdrop.classList.toggle('show', showing)
+          } else {
+            document.body.classList.toggle('sidebar-collapsed')
+          }
+        })
 
         // Backdrop click closes on mobile
         backdrop.addEventListener('click', () => {
-            sidebar.classList.remove('show');
-            backdrop.classList.remove('show');
-            toggleBtn.setAttribute('aria-expanded', 'false');
-        });
+          sidebar.classList.remove('show')
+          backdrop.classList.remove('show')
+          toggleBtn.setAttribute('aria-expanded', 'false')
+        })
 
         // Clean state on resize
         window.addEventListener('resize', () => {
-            if (!isMobile()) {
-                sidebar.classList.remove('show');
-                backdrop.classList.remove('show');
-                toggleBtn.setAttribute('aria-expanded', 'false');
-            }
-        });
+          if (!isMobile()) {
+            sidebar.classList.remove('show')
+            backdrop.classList.remove('show')
+            toggleBtn.setAttribute('aria-expanded', 'false')
+          }
+        })
 
         // Active link highlighting
-        const path = (location.pathname.replace(/\/+$/, '') || '/').toLowerCase();
-        document.querySelectorAll('#sidebar .nav-link').forEach(link => {
-            const href = (link.getAttribute('href') || '').toLowerCase();
-            const isRoot = path === '/' && href === '/';
-            const isMatch = href !== '/' && path.startsWith(href);
-            link.classList.toggle('active', isRoot || isMatch);
-            if (link.classList.contains('active')) link.setAttribute('aria-current', 'page');
-        });
-    })();
-</script>
-</body>
+        const rawPath = (
+          location.pathname.replace(/\/+$/, '') || '/'
+        ).toLowerCase()
+        const alias = [
+          { match: 'dashboard.html', target: '/' },
+          { match: 'settings.html', target: '/settings' },
+          { match: 'transfer-funds.html', target: '/transfer-funds' },
+          { match: 'wallet-transactions.html', target: '/transactions' },
+          { match: 'security-2fa.html', target: '/setup-twofa' },
+        ].find((item) => rawPath.endsWith(item.match))
+        const path = alias ? alias.target : rawPath
+        document.querySelectorAll('#sidebar .nav-link').forEach((link) => {
+          const href = (link.getAttribute('href') || '').toLowerCase()
+          const isRoot = path === '/' && href === '/'
+          const isMatch = href !== '/' && path.startsWith(href)
+          link.classList.toggle('active', isRoot || isMatch)
+          if (link.classList.contains('active'))
+            link.setAttribute('aria-current', 'page')
+        })
+      })()
+    </script>
+  </body>
 </html>

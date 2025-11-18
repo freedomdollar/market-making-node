@@ -293,7 +293,6 @@ public class CexTradeService implements ApplicationService {
                 if (order.getSeqId() == null) {
                     continue;
                 }
-                System.out.println(gson.toJson(order));
 
                 String orderQueryResp = mexcSpotClient.queryOrder(tradeSymbolZano, order.getCexOrderId(), null);
                 OrderStatus orderStatus = gson.fromJson(orderQueryResp, OrderStatus.class);

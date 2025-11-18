@@ -2,639 +2,1092 @@
  * Utilities (de‑duped)
  ***********************/
 /************* App Status helpers *************/
-let mexcKeyState = null; // 'ok' | 'missing' | 'invalid' | null
+let mexcKeyState = null // 'ok' | 'missing' | 'invalid' | null
 
-function toIsoLocal(dLike){
-    const d = (dLike instanceof Date) ? dLike : new Date(dLike);
-    if (isNaN(d.getTime())) return "—";
-    const pad = (n) => String(n).padStart(2, '0');
-    const y = d.getFullYear(), m = pad(d.getMonth()+1), day = pad(d.getDate());
-    const h = pad(d.getHours()), min = pad(d.getMinutes()), s = pad(d.getSeconds());
-    const off = -d.getTimezoneOffset(); // minutes; positive = east of UTC
-    const sign = off >= 0 ? "+" : "-";
-    const oh = pad(Math.floor(Math.abs(off) / 60));
-    const om = pad(Math.abs(off) % 60);
-    return `${y}-${m}-${day} ${h}:${min}:${s}`;
+function toIsoLocal(dLike) {
+    const d = dLike instanceof Date ? dLike : new Date(dLike)
+    if (isNaN(d.getTime())) return '—'
+    const pad = (n) => String(n).padStart(2, '0')
+    const y = d.getFullYear(),
+        m = pad(d.getMonth() + 1),
+        day = pad(d.getDate())
+    const h = pad(d.getHours()),
+        min = pad(d.getMinutes()),
+        s = pad(d.getSeconds())
+    const off = -d.getTimezoneOffset() // minutes; positive = east of UTC
+    const sign = off >= 0 ? '+' : '-'
+    const oh = pad(Math.floor(Math.abs(off) / 60))
+    const om = pad(Math.abs(off) % 60)
+    return `${y}-${m}-${day} ${h}:${min}:${s}`
 }
 
-function fmtNumber(n){ if(n===null||n===undefined||isNaN(n)) return "—"; try{ return Number(n).toLocaleString(); }catch{ return String(n);} }
-function fmtFloat(n, max=8, min=0){ const x=Number(n); if(!isFinite(x)) return "—"; return x.toLocaleString(undefined,{maximumFractionDigits:max, minimumFractionDigits:min}); }
+function fmtNumber(n) {
+    if (n === null || n === undefined || isNaN(n)) return '—'
+    try {
+        return Number(n).toLocaleString()
+    } catch {
+        return String(n)
+    }
+}
+function fmtFloat(n, max = 8, min = 0) {
+    const x = Number(n)
+    if (!isFinite(x)) return '—'
+    return x.toLocaleString(undefined, {
+        maximumFractionDigits: max,
+        minimumFractionDigits: min,
+    })
+}
 // Per your spec: percent = max_net_seen_height / height
-function computePercentBySpec(height, maxSeen){ const h=Number(height)||0, m=Number(maxSeen)||0; if(h<=0) return 0; return (h/m)*100; }
-function toBigIntVal(v){ try{ if(typeof v==="bigint") return v; if(typeof v==="number") return BigInt(Math.trunc(v)); if(typeof v==="string") return BigInt(v.trim()); }catch(_){} return 0n; }
-function fmtAtomic(atomic, decimals){ try{ const d=Math.max(0, Number(decimals)||0); let v=toBigIntVal(atomic); const neg=v<0n; if(neg) v=-v; const pow=10n**BigInt(d); const i=v/pow, f=v%pow; let frac=f.toString().padStart(d,"0").replace(/0+$/,""); return (neg?"-":"")+i.toString()+(frac?("."+frac):""); }catch(_){ const d=Math.max(0, Number(decimals)||0); const num=Number(atomic)/Math.pow(10,d); return isFinite(num)? num.toLocaleString(undefined,{maximumFractionDigits:d}) : "—"; } }
-function updateSyncTimestamp(){ $("#last-updated").text("Last updated: " + toIsoLocal(new Date())); }
-function updateTradesTimestamp(){ $("#trades-last-updated").text("Last updated: " + toIsoLocal(new Date())); }
-function updateTimestamp(){
-    document.getElementById("last-updated-buy").textContent = "Last updated: " + toIsoLocal(new Date());
+function computePercentBySpec(height, maxSeen) {
+    const h = Number(height) || 0,
+        m = Number(maxSeen) || 0
+    if (h <= 0) return 0
+    return (h / m) * 100
+}
+function toBigIntVal(v) {
+    try {
+        if (typeof v === 'bigint') return v
+        if (typeof v === 'number') return BigInt(Math.trunc(v))
+        if (typeof v === 'string') return BigInt(v.trim())
+    } catch (_) {}
+    return 0n
+}
+function fmtAtomic(atomic, decimals) {
+    try {
+        const d = Math.max(0, Number(decimals) || 0)
+        let v = toBigIntVal(atomic)
+        const neg = v < 0n
+        if (neg) v = -v
+        const pow = 10n ** BigInt(d)
+        const i = v / pow,
+            f = v % pow
+        let frac = f.toString().padStart(d, '0').replace(/0+$/, '')
+        return (neg ? '-' : '') + i.toString() + (frac ? '.' + frac : '')
+    } catch (_) {
+        const d = Math.max(0, Number(decimals) || 0)
+        const num = Number(atomic) / Math.pow(10, d)
+        return isFinite(num)
+            ? num.toLocaleString(undefined, { maximumFractionDigits: d })
+            : '—'
+    }
+}
+function updateSyncTimestamp() {
+    $('#last-updated').text('Last updated: ' + toIsoLocal(new Date()))
+}
+function updateTradesTimestamp() {
+    $('#trades-last-updated').text('Last updated: ' + toIsoLocal(new Date()))
+}
+function updateTimestamp() {
+    document.getElementById('last-updated-buy').textContent =
+        'Last updated: ' + toIsoLocal(new Date())
 }
 function fmtTime(ts) {
-    if (!ts) return "—";
-    return toIsoLocal(ts);
+    if (!ts) return '—'
+    return toIsoLocal(ts)
 }
 
-function setCardEnabled(cardId, enabled, message){
-    const $c = $("#"+cardId);
-    $c.toggleClass("is-disabled", !enabled);
-    const $ov = $c.find(".card-overlay");
-    if(!enabled){ $ov.text(message||"Service initializing…"); }
+function setCardEnabled(cardId, enabled, message) {
+    const $c = $('#' + cardId)
+    $c.toggleClass('is-disabled', !enabled)
+    const $ov = $c.find('.card-overlay')
+    if (!enabled) {
+        $ov.text(message || 'Service initializing…')
+    }
 }
 
 /***********************
  * Service readiness
  ***********************/
-const serviceState = { appStarted:false, daemon:false, wallet:false, dex:false, cex:false, dexTradingActive:false, alias:false };
-let daemonModal;
+const serviceState = {
+    appStarted: false,
+    daemon: false,
+    wallet: false,
+    dex: false,
+    cex: false,
+    dexTradingActive: false,
+    alias: false,
+}
+let daemonModal
 
-function applyServiceState(){
+function applyServiceState() {
     // Modal for daemon
-    if(serviceState.daemon) {
-        daemonModal?.hide();
-        setCardEnabled("sync-card", true);
+    if (serviceState.daemon) {
+        daemonModal?.hide()
+        setCardEnabled('sync-card', true)
     } else {
-        setCardEnabled("sync-card", false, "Zano daemon is initializing…");
+        setCardEnabled('sync-card', false, 'Zano daemon is initializing…')
         if (serviceState.app) {
-            $("#daemon-modal-body").html("Zano daemon is initializing, please wait 5–20 minutes.");
+            $('#daemon-modal-body').html(
+                'Zano daemon is initializing, please wait 5–20 minutes.'
+            )
         } else {
-            $("#daemon-modal-body").html("Application initializing, please wait a few seconds");
+            $('#daemon-modal-body').html(
+                'Application initializing, please wait a few seconds'
+            )
         }
-        daemonModal?.show();
-
+        daemonModal?.show()
     }
 
     // Card gates
-    setCardEnabled("wallet-card", serviceState.wallet, "Wallet service not ready…");
-    setCardEnabled("orders-card", serviceState.dex, "DEX trading service not ready…");
-    setCardEnabled("metrics-card", serviceState.dex, "DEX trading service not ready…");
-    setCardEnabled("mexc-card", serviceState.cex, "CEX trading service not ready…");
+    setCardEnabled(
+        'wallet-card',
+        serviceState.wallet,
+        'Wallet service not ready…'
+    )
+    setCardEnabled(
+        'orders-card',
+        serviceState.dex,
+        'DEX trading service not ready…'
+    )
+    setCardEnabled(
+        'metrics-card',
+        serviceState.dex,
+        'DEX trading service not ready…'
+    )
+    setCardEnabled(
+        'mexc-card',
+        serviceState.cex,
+        'CEX trading service not ready…'
+    )
 
     // Start/stop pollers per service
-    if(serviceState.daemon){ startPoller("zano", fetchZanoStatus, 10000); } else { stopPoller("zano"); }
-    if(serviceState.wallet){
-        startPoller("mm", fetchMmStatus, 5000);
+    if (serviceState.daemon) {
+        startPoller('zano', fetchZanoStatus, 10000)
     } else {
-        stopPoller("mm");
+        stopPoller('zano')
     }
-    if(serviceState.cex){ startPoller("mexc", fetchMexcStatus, 15000); } else { stopPoller("mexc"); }
-    if(serviceState.dex){ startPoller("trades", fetchTrades, 15000); } else { stopPoller("trades"); }
-    if(serviceState.dex){ startPoller("tradesbuy", fetchTradesBuy, 15000); } else { stopPoller("tradesbuy"); }
+    if (serviceState.wallet) {
+        startPoller('mm', fetchMmStatus, 5000)
+    } else {
+        stopPoller('mm')
+    }
+    if (serviceState.cex) {
+        startPoller('mexc', fetchMexcStatus, 15000)
+    } else {
+        stopPoller('mexc')
+    }
+    if (serviceState.dex) {
+        startPoller('trades', fetchTrades, 15000)
+    } else {
+        stopPoller('trades')
+    }
+    if (serviceState.dex) {
+        startPoller('tradesbuy', fetchTradesBuy, 15000)
+    } else {
+        stopPoller('tradesbuy')
+    }
 
     if (serviceState.pendingAlias) {
-        $("#alias-input").attr("disabled", "disabled");
-        $("#alias-save-btn").attr("disabled", "disabled");
-        $("#alias-alert").html("Alias is pending confirmations.");
+        $('#alias-input').attr('disabled', 'disabled')
+        $('#alias-save-btn').attr('disabled', 'disabled')
+        $('#alias-alert').html('Alias is pending confirmations.')
     }
     if (serviceState.alias) {
-        $("#alias-input").attr("disabled", "disabled");
-        $("#alias-save-btn").attr("disabled", "disabled");
-        $("#alias-input").hide();
-        $("#alias-save-btn").hide();
+        $('#alias-input').attr('disabled', 'disabled')
+        $('#alias-save-btn').attr('disabled', 'disabled')
+        $('#alias-input').hide()
+        $('#alias-save-btn').hide()
     } else {
-        $("#alias-input").removeAttr("disabled", "disabled");
-        $("#alias-save-btn").removeAttr("disabled", "disabled");
-        $("#alias-input").show();
-        $("#alias-save-btn").show();
+        $('#alias-input').removeAttr('disabled', 'disabled')
+        $('#alias-save-btn').removeAttr('disabled', 'disabled')
+        $('#alias-input').show()
+        $('#alias-save-btn').show()
     }
 
     if (serviceState.tradingOpen) {
-        $("#btn-start-bot").prop("disabled", true);
-        $("#btn-stop-bot").prop("disabled", false);
+        $('#btn-start-bot').prop('disabled', true)
+        $('#btn-stop-bot').prop('disabled', false)
     } else {
         if (serviceState.tradingOpen) {
-            $("#btn-start-bot").prop("disabled", false);
-            $("#btn-stop-bot").prop("disabled", true);
+            $('#btn-start-bot').prop('disabled', false)
+            $('#btn-stop-bot').prop('disabled', true)
         }
     }
 
-    updateAppStatusCard();
+    updateAppStatusCard()
 }
 
-function refreshAppStatus(){
-    return $.getJSON("/api/application-status").done(function(res){
-        const p = res?.payload||{};
-        serviceState.daemon = !!p.zanoDaemonActive;
-        serviceState.wallet = !!p.zanoWalletServiceActive;
-        serviceState.dex    = !!p.zanoDexTradingServiceActive;
-        serviceState.cex    = !!p.zanoCexTradingServiceActive;
-        serviceState.app    = !!p.appStarted;
-        serviceState.alias    = !!p.walletHasAlias;
-        serviceState.pendingAlias    = !!p.walletHasPendingAlias;
-        serviceState.tradingOpen = !!p.zanoDexTradingBotActive;
-        serviceState.telegram = !!p.telegramServiceActive;
-        serviceState.update = !!p.updateAvailable;
+function refreshAppStatus() {
+    return $.getJSON('/api/application-status')
+        .done(function (res) {
+            const p = res?.payload || {}
+            serviceState.daemon = !!p.zanoDaemonActive
+            serviceState.wallet = !!p.zanoWalletServiceActive
+            serviceState.dex = !!p.zanoDexTradingServiceActive
+            serviceState.cex = !!p.zanoCexTradingServiceActive
+            serviceState.app = !!p.appStarted
+            serviceState.alias = !!p.walletHasAlias
+            serviceState.pendingAlias = !!p.walletHasPendingAlias
+            serviceState.tradingOpen = !!p.zanoDexTradingBotActive
+            serviceState.telegram = !!p.telegramServiceActive
+            serviceState.update = !!p.updateAvailable
 
-        applyServiceState();
-    }).fail(function(){
-        // If status endpoint fails, consider all inactive to avoid spamming other endpoints.
-        serviceState.daemon = serviceState.wallet = serviceState.dex = serviceState.cex = serviceState.pendingAlias = serviceState.app = serviceState.alias = serviceState.telegram = serviceState.update = false;
-        applyServiceState();
-    });
+            applyServiceState()
+        })
+        .fail(function () {
+            // If status endpoint fails, consider all inactive to avoid spamming other endpoints.
+            serviceState.daemon =
+                serviceState.wallet =
+                    serviceState.dex =
+                        serviceState.cex =
+                            serviceState.pendingAlias =
+                                serviceState.app =
+                                    serviceState.alias =
+                                        serviceState.telegram =
+                                            serviceState.update =
+                                                false
+            applyServiceState()
+        })
 }
-
-
 
 /***********************
  * Poller manager (no leaks)
  ***********************/
-const POLLERS = { zano:null, mm:null, mexc:null, trades:null, app:null };
-function startPoller(name, fn, everyMs){
-    if(POLLERS[name]) return; // already running
-    POLLERS[name] = setInterval(fn, everyMs);
+const POLLERS = { zano: null, mm: null, mexc: null, trades: null, app: null }
+function startPoller(name, fn, everyMs) {
+    if (POLLERS[name]) return // already running
+    POLLERS[name] = setInterval(fn, everyMs)
 }
-function stopPoller(name){
-    if(POLLERS[name]){ clearInterval(POLLERS[name]); POLLERS[name]=null; }
+function stopPoller(name) {
+    if (POLLERS[name]) {
+        clearInterval(POLLERS[name])
+        POLLERS[name] = null
+    }
 }
 // Clear on page unload (defensive)
-window.addEventListener("beforeunload", ()=>{ Object.keys(POLLERS).forEach(stopPoller); });
+window.addEventListener('beforeunload', () => {
+    Object.keys(POLLERS).forEach(stopPoller)
+})
 
 /***********************
  * Sync status
  ***********************/
-function setSyncState(state){
-    const dot=$("#status-dot"), badge=$("#network-state");
-    if(Number(state)===2){ dot.removeClass("status-error").addClass("status-ok"); badge.removeClass("bg-secondary bg-danger bg-primary").addClass("bg-success").text("Synced and ready"); }
-    else if(Number(state)===1){ dot.removeClass("status-ok").addClass("status-error"); badge.removeClass("bg-secondary bg-success bg-danger").addClass("bg-primary").text("Syncing…"); }
-    else { dot.removeClass("status-ok").addClass("status-error"); badge.removeClass("bg-success bg-primary").addClass("bg-secondary").text("Unknown"); }
+function setSyncState(state) {
+    const dot = $('#status-dot'),
+        badge = $('#network-state')
+    if (Number(state) === 2) {
+        dot.removeClass('status-error').addClass('status-ok')
+        badge
+            .removeClass('bg-secondary bg-danger bg-primary')
+            .addClass('bg-success')
+            .text('Synced and ready')
+    } else if (Number(state) === 1) {
+        dot.removeClass('status-ok').addClass('status-error')
+        badge
+            .removeClass('bg-secondary bg-success bg-danger')
+            .addClass('bg-primary')
+            .text('Syncing…')
+    } else {
+        dot.removeClass('status-ok').addClass('status-error')
+        badge
+            .removeClass('bg-success bg-primary')
+            .addClass('bg-secondary')
+            .text('Unknown')
+    }
 }
 
-function fetchZanoStatus(){
-    if(!serviceState.daemon) return; // gate
-    $.getJSON("/api/zano-status")
-        .done(function(res){
-            const p = (res && res.payload)?res.payload:(res||{});
-            const height = Number(p.height)||0;
-            const maxSeen = Number(p.max_net_seen_height)||0;
-            const state = p.daemon_network_state;
+function fetchZanoStatus() {
+    if (!serviceState.daemon) return // gate
+    $.getJSON('/api/zano-status')
+        .done(function (res) {
+            const p = res && res.payload ? res.payload : res || {}
+            const height = Number(p.height) || 0
+            const maxSeen = Number(p.max_net_seen_height) || 0
+            const state = p.daemon_network_state
 
-            const percent = computePercentBySpec(height, maxSeen);
-            const barWidth = Math.max(0, Math.min(100, percent));
-            $("#sync-current").text(fmtNumber(maxSeen));
-            $("#sync-max").text(fmtNumber(height));
-            $("#sync-percent").text(percent.toFixed(2)+"%");
-            $("#sync-bar").css("width", barWidth.toFixed(2)+"%").attr("aria-valuenow", barWidth.toFixed(2)).attr("title", percent.toFixed(2)+"%");
+            const percent = computePercentBySpec(height, maxSeen)
+            const barWidth = Math.max(0, Math.min(100, percent))
+            $('#sync-current').text(fmtNumber(maxSeen))
+            $('#sync-max').text(fmtNumber(height))
+            $('#sync-percent').text(percent.toFixed(2) + '%')
+            $('#sync-bar')
+                .css('width', barWidth.toFixed(2) + '%')
+                .attr('aria-valuenow', barWidth.toFixed(2))
+                .attr('title', percent.toFixed(2) + '%')
 
-            const behind = Math.max(0, maxSeen - height);
-            $("#blocks-behind").text(behind>0 ? `Behind by ${fmtNumber(behind)} blocks` : "Up to date");
+            const behind = Math.max(0, maxSeen - height)
+            $('#blocks-behind').text(
+                behind > 0 ? `Behind by ${fmtNumber(behind)} blocks` : 'Up to date'
+            )
 
-            setSyncState(state);
-            updateSyncTimestamp();
+            setSyncState(state)
+            updateSyncTimestamp()
         })
-        .fail(function(jqXHR){
-            $("#network-state").removeClass("bg-success bg-primary").addClass("bg-danger").text("Error");
-            $("#blocks-behind").text("Failed to fetch /api/zano-status ("+jqXHR.status+")");
-            $("#status-dot").removeClass("status-ok").addClass("status-error");
-            updateSyncTimestamp();
-        });
+        .fail(function (jqXHR) {
+            $('#network-state')
+                .removeClass('bg-success bg-primary')
+                .addClass('bg-danger')
+                .text('Error')
+            $('#blocks-behind').text(
+                'Failed to fetch /api/zano-status (' + jqXHR.status + ')'
+            )
+            $('#status-dot').removeClass('status-ok').addClass('status-error')
+            updateSyncTimestamp()
+        })
 }
 
 /***********************
  * MEXC status / balances
  ***********************/
-function updateMexcBalances(res){
-    const $tb=$("#mexc-balances-tbody").empty();
-    [["USDT",res?.mexcUsdtBalance],["fUSD",res?.mexcFusdBalance],["ZANO",res?.mexcZanoBalance]]
-        .forEach(([asset,val])=>{ $tb.append($("<tr>").append($("<td>").text(asset), $("<td>").text(fmtFloat(val,12)))); });
+function updateMexcBalances(res) {
+    const $tb = $('#mexc-balances-tbody').empty()
+    ;[
+        ['USDT', res?.mexcUsdtBalance],
+        ['fUSD', res?.mexcFusdBalance],
+        ['ZANO', res?.mexcZanoBalance],
+    ].forEach(([asset, val]) => {
+        $tb.append(
+            $('<tr>').append($('<td>').text(asset), $('<td>').text(fmtFloat(val, 12)))
+        )
+    })
 }
-function setMexcStatusUI(statusCode, res, httpCode){
-    const badge=$("#mexc-status-badge"), alertBox=$("#mexc-alert"), help=$("#mexc-help"), balancesWrapper=$("#mexc-balances-wrapper");
-    function setBadge(cls, text){ badge.removeClass("bg-success bg-danger bg-secondary bg-primary bg-warning").addClass(cls).text(text); }
-    if(statusCode===200){
-        setBadge("bg-success","OK");
-        alertBox.addClass("d-none").text("");
-        balancesWrapper.removeClass("d-none");
-        updateMexcBalances(res||{});
-        help.text("Connected to MEXC API.");
-    }else if(statusCode===426){
-        setBadge("bg-secondary","No API key");
-        alertBox.removeClass("d-none").text("No MEXC API key set. Please set your API key on the settings page.");
-        balancesWrapper.addClass("d-none");
-        help.text("Status 426: missing API key.");
-    }else if(statusCode===424){
-        setBadge("bg-danger","Invalid API key");
-        alertBox.removeClass("d-none").text("The MEXC API key is incorrect. Please check it on the settings page.");
-        balancesWrapper.addClass("d-none");
-        help.text("Status 424: invalid API key.");
-    }else{
-        setBadge("bg-danger","Error");
-        alertBox.removeClass("d-none").text("Failed to fetch MEXC status ("+(httpCode||statusCode||"unknown")+")");
-        balancesWrapper.addClass("d-none");
-        help.text("");
+function setMexcStatusUI(statusCode, res, httpCode) {
+    const badge = $('#mexc-status-badge'),
+        alertBox = $('#mexc-alert'),
+        help = $('#mexc-help'),
+        balancesWrapper = $('#mexc-balances-wrapper')
+    function setBadge(cls, text) {
+        badge
+            .removeClass('bg-success bg-danger bg-secondary bg-primary bg-warning')
+            .addClass(cls)
+            .text(text)
     }
-    if (statusCode === 200)      { mexcKeyState = "ok"; }
-    else if (statusCode === 426) { mexcKeyState = "missing"; }
-    else if (statusCode === 424) { mexcKeyState = "invalid"; }
-    else                         { mexcKeyState = null; }
-    updateAppStatusCard();
+    if (statusCode === 200) {
+        setBadge('bg-success', 'OK')
+        alertBox.addClass('d-none').text('')
+        balancesWrapper.removeClass('d-none')
+        updateMexcBalances(res || {})
+        help.text('Connected to MEXC API.')
+    } else if (statusCode === 426) {
+        setBadge('bg-secondary', 'No API key')
+        alertBox
+            .removeClass('d-none')
+            .text(
+                'No MEXC API key set. Please set your API key on the settings page.'
+            )
+        balancesWrapper.addClass('d-none')
+        help.text('Status 426: missing API key.')
+    } else if (statusCode === 424) {
+        setBadge('bg-danger', 'Invalid API key')
+        alertBox
+            .removeClass('d-none')
+            .text(
+                'The MEXC API key is incorrect. Please check it on the settings page.'
+            )
+        balancesWrapper.addClass('d-none')
+        help.text('Status 424: invalid API key.')
+    } else {
+        setBadge('bg-danger', 'Error')
+        alertBox
+            .removeClass('d-none')
+            .text(
+                'Failed to fetch MEXC status (' +
+                (httpCode || statusCode || 'unknown') +
+                ')'
+            )
+        balancesWrapper.addClass('d-none')
+        help.text('')
+    }
+    if (statusCode === 200) {
+        mexcKeyState = 'ok'
+    } else if (statusCode === 426) {
+        mexcKeyState = 'missing'
+    } else if (statusCode === 424) {
+        mexcKeyState = 'invalid'
+    } else {
+        mexcKeyState = null
+    }
+    updateAppStatusCard()
 }
-function fetchMexcStatus(){
-    if(!serviceState.cex) return; // gate
-    $.getJSON("/api/bot-data-dash-new")
-        .done(function(res,_t,jqXHR){ const code=Number(res?.status)||jqXHR.status||0; setMexcStatusUI(code,res,jqXHR.status); })
-        .fail(function(jqXHR){ const code=jqXHR.status; if(code===424||code===426){ setMexcStatusUI(code,null,code); } else { setMexcStatusUI(-1,null,code); } });
+function fetchMexcStatus() {
+    if (!serviceState.cex) return // gate
+    $.getJSON('/api/bot-data-dash-new')
+        .done(function (res, _t, jqXHR) {
+            const code = Number(res?.status) || jqXHR.status || 0
+            setMexcStatusUI(code, res, jqXHR.status)
+        })
+        .fail(function (jqXHR) {
+            const code = jqXHR.status
+            if (code === 424 || code === 426) {
+                setMexcStatusUI(code, null, code)
+            } else {
+                setMexcStatusUI(-1, null, code)
+            }
+        })
 }
 
 /***********************
  * Wallet, metrics, orders (from /api/get-mm-status)
  ***********************/
-let CURRENT_ALIAS=null, CURRENT_ADDRESS=null, LAST_ASSET_MAP=null, qrcode=null;
+let CURRENT_ALIAS = null,
+    CURRENT_ADDRESS = null,
+    LAST_ASSET_MAP = null,
+    qrcode = null
 
-function setWalletAlias(aliasStr){
-    $("#wallet-alias").text(aliasStr ? String(aliasStr) : "n/a");
-    CURRENT_ALIAS = aliasStr || null;
-    if(aliasStr && !$("#alias-input").val()) $("#alias-input").val(aliasStr);
+function setWalletAlias(aliasStr) {
+    $('#wallet-alias').text(aliasStr ? String(aliasStr) : 'n/a')
+    CURRENT_ALIAS = aliasStr || null
+    if (aliasStr && !$('#alias-input').val()) $('#alias-input').val(aliasStr)
 }
-function setWalletAddress(addressStr){
-    const $input = $("#wallet-address-input");
-    const addr = addressStr ? String(addressStr) : "";
-    $input.val(addr || "Error");
-    CURRENT_ADDRESS = addr || null;
+function setWalletAddress(addressStr) {
+    const $input = $('#wallet-address-input')
+    const addr = addressStr ? String(addressStr) : ''
+    $input.val(addr || 'Error')
+    CURRENT_ADDRESS = addr || null
 
-    if (CURRENT_ADDRESS){
-        if(!qrcode){
-            qrcode = new QRCode("qrcode", {
-                text: "zano:" + CURRENT_ADDRESS,
-                width: 128, height: 128,
-                colorDark: "#000000", colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
-            });
+    if (CURRENT_ADDRESS) {
+        if (!qrcode) {
+            qrcode = new QRCode('qrcode', {
+                text: 'zano:' + CURRENT_ADDRESS,
+                width: 128,
+                height: 128,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M,
+            })
         } else {
-            qrcode.clear();
-            qrcode.makeCode("zano:" + CURRENT_ADDRESS);
+            qrcode.clear()
+            qrcode.makeCode('zano:' + CURRENT_ADDRESS)
         }
     }
 }
-function setAliasNoticeVisible(visible){ $("#alias-alert").toggleClass("d-none", !visible); }
-function hasAnyFunds(assetMap){
-    if(!assetMap||typeof assetMap!=="object") return false;
-    try{ for(const k in assetMap){ const a=assetMap[k]||{}; if(toBigIntVal(a.total??0)>0n || toBigIntVal(a.unlocked??0)>0n) return true; } }catch(_){}
-    return false;
+function setAliasNoticeVisible(visible) {
+    $('#alias-alert').toggleClass('d-none', !visible)
 }
-function updateWalletStatusFromMap(assetBalanceMap){
-    const $tb=$("#wallet-tbody").empty();
-    if(!assetBalanceMap || Object.keys(assetBalanceMap).length===0){
-        $tb.append($("<tr>").append($("<td>").addClass("text-muted").text("—"), $("<td>").addClass("text-muted").text("—"), $("<td>").addClass("text-muted").text("—"), $("<td>").addClass("text-muted").text("—"), $("<td>").addClass("text-muted").text("—")));
-        return;
+function hasAnyFunds(assetMap) {
+    if (!assetMap || typeof assetMap !== 'object') return false
+    try {
+        for (const k in assetMap) {
+            const a = assetMap[k] || {}
+            if (toBigIntVal(a.total ?? 0) > 0n || toBigIntVal(a.unlocked ?? 0) > 0n)
+                return true
+        }
+    } catch (_) {}
+    return false
+}
+function updateWalletStatusFromMap(assetBalanceMap) {
+    const $tb = $('#wallet-tbody').empty()
+    if (!assetBalanceMap || Object.keys(assetBalanceMap).length === 0) {
+        $tb.append(
+            $('<tr>').append(
+                $('<td>').addClass('text-muted').text('—'),
+                $('<td>').addClass('text-muted').text('—'),
+                $('<td>').addClass('text-muted').text('—'),
+                $('<td>').addClass('text-muted').text('—'),
+                $('<td>').addClass('text-muted').text('—')
+            )
+        )
+        return
     }
-    Object.keys(assetBalanceMap).forEach(assetId=>{
-        const a=assetBalanceMap[assetId]||{}, info=a.asset_info||{}, dp=Number(info.decimal_point)||0;
-        const $tr=$("<tr>");
+    Object.keys(assetBalanceMap).forEach((assetId) => {
+        const a = assetBalanceMap[assetId] || {},
+            info = a.asset_info || {},
+            dp = Number(info.decimal_point) || 0
+        const $tr = $('<tr>')
         $tr.append(
-            $("<td>").text(info.full_name||info.ticker||assetId),
-            $("<td>").text(fmtAtomic(a.total??0,dp)),
-            $("<td>").text(fmtAtomic(a.unlocked??0,dp)),
-            $("<td>").text(fmtAtomic(a.awaiting_in??0,dp)),
-            $("<td>").text((a.outs_count??a.utxos??"—").toString())
-        );
-        $tb.append($tr);
-    });
+            $('<td>').text(info.full_name || info.ticker || assetId),
+            $('<td>').text(fmtAtomic(a.total ?? 0, dp)),
+            $('<td>').text(fmtAtomic(a.unlocked ?? 0, dp)),
+            $('<td>').text(fmtAtomic(a.awaiting_in ?? 0, dp)),
+            $('<td>').text((a.outs_count ?? a.utxos ?? '—').toString())
+        )
+        $tb.append($tr)
+    })
 }
-function updateBotControls(alias, assetMap){
-    const aliasSet=!!alias, fundsOk=hasAnyFunds(assetMap), canStart=aliasSet && fundsOk;
+function updateBotControls(alias, assetMap) {
+    const aliasSet = !!alias,
+        fundsOk = hasAnyFunds(assetMap),
+        canStart = aliasSet && fundsOk
     if (serviceState.tradingOpen) {
-        $("#btn-start-bot").prop("disabled", true);
+        $('#btn-start-bot').prop('disabled', true)
     } else if (canStart) {
-        $("#btn-start-bot").prop("disabled", false);
+        $('#btn-start-bot').prop('disabled', false)
     }
 
-    $("#bot-alert").toggleClass("d-none", canStart);
-    let hint="";
-    if(!aliasSet && !fundsOk) hint="Alias is not set and no wallet funds detected.";
-    else if(!aliasSet) hint="Alias is not set.";
-    else if(!fundsOk) hint="No wallet funds detected.";
-    $("#bot-help").toggleClass("text-danger", !canStart).toggleClass("text-success", canStart).text(hint);
+    $('#bot-alert').toggleClass('d-none', canStart)
+    let hint = ''
+    if (!aliasSet && !fundsOk)
+        hint = 'Alias is not set and no wallet funds detected.'
+    else if (!aliasSet) hint = 'Alias is not set.'
+    else if (!fundsOk) hint = 'No wallet funds detected.'
+    $('#bot-help')
+        .toggleClass('text-danger', !canStart)
+        .toggleClass('text-success', canStart)
+        .text(hint)
 }
-function updateOrdersTable(orders){
-    const $tb=$("#orders-tbody").empty();
-    const list=Array.isArray(orders)?orders.slice():[];
-    list.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
-    if(list.length===0){ $tb.append($("<tr>").append($("<td>").attr("colspan",10).addClass("text-muted").text("No orders"))); $("#orders-count").text("0"); return; }
-    list.forEach(o=>{
-        const $tr=$("<tr>");
-        const typeBadge=$("<span>").addClass("badge " + (o.type==="buy"?"bg-success":(o.type==="sell"?"bg-danger":"bg-secondary"))).text(o.type||"—");
-        const sideBadge=$("<span>").addClass("badge bg-primary").text(o.side||"—");
-        const statusBadge=$("<span>").addClass("badge " + (o.status==="active"?"bg-primary":"bg-secondary")).text(o.status||"—");
+function updateOrdersTable(orders) {
+    const $tb = $('#orders-tbody').empty()
+    const list = Array.isArray(orders) ? orders.slice() : []
+    list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    if (list.length === 0) {
+        $tb.append(
+            $('<tr>').append(
+                $('<td>').attr('colspan', 10).addClass('text-muted').text('No orders')
+            )
+        )
+        $('#orders-count').text('0')
+        return
+    }
+    list.forEach((o) => {
+        const $tr = $('<tr>')
+        const typeBadge = $('<span>')
+            .addClass(
+                'badge ' +
+                (o.type === 'buy'
+                    ? 'bg-success'
+                    : o.type === 'sell'
+                        ? 'bg-danger'
+                        : 'bg-secondary')
+            )
+            .text(o.type || '—')
+        const sideBadge = $('<span>')
+            .addClass('badge bg-primary')
+            .text(o.side || '—')
+        const statusBadge = $('<span>')
+            .addClass(
+                'badge ' + (o.status === 'active' ? 'bg-primary' : 'bg-secondary')
+            )
+            .text(o.status || '—')
         $tr.append(
-            $("<td>").text(o.id??"—"),
-            $("<td>").append(typeBadge),
-            $("<td>").text(fmtFloat(o.amount,8)),
-            $("<td>").text(fmtFloat(o.price,8)),
-            $("<td>").text(fmtFloat(o.total,8)),
-            $("<td>").text(fmtFloat(o.zanoPrice,6)),
-            $("<td>").append(statusBadge),
-            $("<td>").text(o.createdAt ? fmtTime(o.createdAt) : "—"),
-        );
-        $tb.append($tr);
-    });
-    $("#orders-count").text(String(list.length));
+            $('<td>').text(o.id ?? '—'),
+            $('<td>').append(typeBadge),
+            $('<td>').text(fmtFloat(o.amount, 8)),
+            $('<td>').text(fmtFloat(o.price, 8)),
+            $('<td>').text(fmtFloat(o.total, 8)),
+            $('<td>').text(fmtFloat(o.zanoPrice, 6)),
+            $('<td>').append(statusBadge),
+            $('<td>').text(o.createdAt ? fmtTime(o.createdAt) : '—')
+        )
+        $tb.append($tr)
+    })
+    $('#orders-count').text(String(list.length))
 }
-function updateMetricsCard(res){
+function updateMetricsCard(res) {
     const metrics = [
-        ["Current ask price", fmtFloat(res.currentAskPrice,12) + " ZANO"],
-        ["Current bid price", fmtFloat(res.currentBidPrice,12) + " ZANO"],
-        ["Current Zano CEX Price (Average)", res.currentZanoPriceAverage + " USDT"],
-        ["Current Zano Price (Ask Weighted)", res.currentZanoPriceAskWeighted + " USDT"],
-        ["Current Zano Price (Bid Weighted)", res.currentZanoPriceBidWeighted + " USDT"],
-        ["Current Ask Volume (MEXC)", res.currentAskVolume + " ZANO"],
-        ["Current Bid Volume (MEXC)", res.currentBidVolume + " ZANO"],
-        ["Average Ask Volume (MEXC)", res.averageAskVolume + " ZANO"],
-        ["Average Bid Volume (MEXC)", res.averageBidVolume + " ZANO"],
-    ];
-    const $tb=$("#metrics-tbody").empty();
-    metrics.forEach(([k,v])=> $tb.append($("<tr>").append($("<td>").text(k), $("<td>").text(v))) );
-    $("#metrics-help").text("Live snapshot from /api/get-mm-status");
+        ['Current ask price', fmtFloat(res.currentAskPrice, 12) + ' ZANO'],
+        ['Current bid price', fmtFloat(res.currentBidPrice, 12) + ' ZANO'],
+        ['Current Zano CEX Price (Average)', res.currentZanoPriceAverage + ' USDT'],
+        [
+            'Current Zano Price (Ask Weighted)',
+            res.currentZanoPriceAskWeighted + ' USDT',
+        ],
+        [
+            'Current Zano Price (Bid Weighted)',
+            res.currentZanoPriceBidWeighted + ' USDT',
+        ],
+        ['Current Ask Volume (MEXC)', res.currentAskVolume + ' ZANO'],
+        ['Current Bid Volume (MEXC)', res.currentBidVolume + ' ZANO'],
+        ['Average Ask Volume (MEXC)', res.averageAskVolume + ' ZANO'],
+        ['Average Bid Volume (MEXC)', res.averageBidVolume + ' ZANO'],
+    ]
+    const $tb = $('#metrics-tbody').empty()
+    metrics.forEach(([k, v]) =>
+        $tb.append($('<tr>').append($('<td>').text(k), $('<td>').text(v)))
+    )
+    $('#metrics-help').text('Live snapshot from /api/get-mm-status')
 }
-function fetchMmStatus(){
-    if(!serviceState.wallet) return; // gate the endpoint to avoid errors before ready
-    $.getJSON("/api/get-mm-status")
-        .done(function(res){
-            const alias = (res && Object.prototype.hasOwnProperty.call(res, "walletAlias")) ? res.walletAlias : null;
-            setWalletAlias(alias||null);
-            setAliasNoticeVisible(alias==null);
+function fetchMmStatus() {
+    if (!serviceState.wallet) return // gate the endpoint to avoid errors before ready
+    $.getJSON('/api/get-mm-status')
+        .done(function (res) {
+            const alias =
+                res && Object.prototype.hasOwnProperty.call(res, 'walletAlias')
+                    ? res.walletAlias
+                    : null
+            setWalletAlias(alias || null)
+            setAliasNoticeVisible(alias == null)
 
-            const assetBalanceMap = res?.walletsAssetBalanceMap?.main?.assetBalanceMap || {};
-            LAST_ASSET_MAP = assetBalanceMap;
-            updateWalletStatusFromMap(assetBalanceMap);
+            const assetBalanceMap =
+                res?.walletsAssetBalanceMap?.main?.assetBalanceMap || {}
+            LAST_ASSET_MAP = assetBalanceMap
+            updateWalletStatusFromMap(assetBalanceMap)
 
-            const address = res?.walletsAssetBalanceMap?.main?.walletAdress || null;
-            setWalletAddress(address);
+            const address = res?.walletsAssetBalanceMap?.main?.walletAdress || null
+            setWalletAddress(address)
 
             // Only update orders/metrics if DEX/CEX services are active; otherwise skip rendering those parts
-            if(serviceState.dex) updateOrdersTable(res.activeOrders||[]);
-            if(serviceState.dex) updateMetricsCard(res);
+            if (serviceState.dex) updateOrdersTable(res.activeOrders || [])
+            if (serviceState.dex) updateMetricsCard(res)
 
-            updateBotControls(CURRENT_ALIAS, LAST_ASSET_MAP);
-            updateAppStatusCard();
+            updateBotControls(CURRENT_ALIAS, LAST_ASSET_MAP)
+            updateAppStatusCard()
         })
-        .fail(function(jqXHR){
-            $("#alias-help").removeClass("text-success").addClass("text-danger").text("Failed to fetch /api/get-mm-status ("+jqXHR.status+")");
-            updateBotControls(null, null);
-        });
+        .fail(function (jqXHR) {
+            $('#alias-help')
+                .removeClass('text-success')
+                .addClass('text-danger')
+                .text('Failed to fetch /api/get-mm-status (' + jqXHR.status + ')')
+            updateBotControls(null, null)
+        })
 }
 
 /***********************
  * Trades table (flow)
  ***********************/
-function badgeForStatus(status, statusString){
-    let cls="bg-primary", text="Pending";
-    if(typeof status==="number"){ if(status===3){ cls="bg-success"; text="Filled"; } else if(status<0){ cls="bg-danger"; text="Failed"; } }
-    if(typeof statusString==="string" && statusString.trim()) text=statusString.trim();
-    const $b=$("<span>").addClass("badge "+cls).text(text);
-    if(typeof status==="number") $b.attr("title","status="+status);
-    return $b;
-}
-function renderTrades(payload){
-    const $tb=$("#trades-tbody").empty();
-    const rows=Array.isArray(payload)?payload.slice():[];
-    rows.sort((a,b)=> Number(b.timestampLong || +new Date(b.timestamp)) - Number(a.timestampLong || +new Date(a.timestamp)));
-    if(rows.length===0){ $tb.append($("<tr>").append($("<td>").attr("colspan",13).addClass("text-muted").text("No trades found"))); $("#rows-count").text("0 rows"); return; }
-    rows.forEach(tr=>{
-        const tsDex=tr.timestamp||null, fusdSold=tr.tokensTraded, zanoRecv=tr.zanoTraded, zanoUsdtRef=tr.zanoUsdtPrice;
-        const mx=tr.zanoSellOrder||null, mxZano=mx?mx.firstAmount:null, mxPrice=mx?mx.price:null, mxUsdtT=mx?mx.secondAmountTarget:null, mxStatus=mx?mx.status:null, mxStr=mx?mx.statusString:null, mxTs=mx?mx.timestamp:null;
-        const fb=tr.fusdBuyOrder||null, fbFusd=fb?fb.firstAmount:null, fbPrice=fb?fb.price:null, fbUsdt=fb?fb.secondAmount:null, fbStatus=fb?fb.status:null, fbStr=fb?fb.statusString:null, fbTs=fb?fb.timestamp:null;
-
-        const $tr=$("<tr>");
-        $tr.append(
-            $("<td>").text(toIsoLocal(new Date(tsDex))),
-            $("<td>").text(fmtFloat(fusdSold, tr.decimals??8)),
-            $("<td>").text(fmtFloat(zanoRecv, 12)),
-            $("<td class='colsecr'>").text(fmtFloat(zanoUsdtRef,8)),
-            $("<td>").text(fmtFloat(mxZano,12)),
-            $("<td>").text(fmtFloat(mxPrice,6)),
-            $("<td>").text(fmtFloat(mxUsdtT,6)),
-            $("<td class='colsecr'>").append(mx ? badgeForStatus(mxStatus, mxStr) : $("<span>").addClass("text-muted").text("—"))
-                .append(mx ? $("<div>").addClass("text-muted small").text(fmtTime(mxTs)) : ""),
-            $("<td>").text(fb?fmtFloat(fbFusd,8):"—"),
-            $("<td>").text(fb?fmtFloat(fbPrice,8):"—"),
-            $("<td>").text(fb?fmtFloat(fbUsdt,8):"—"),
-            $("<td>").append(fb ? badgeForStatus(fbStatus, fbStr) : $("<span>").addClass("text-muted").text("—"))
-                .append(fb ? $("<div>").addClass("text-muted small").text(fmtTime(fbTs)) : "")
-        );
-        if(typeof mxStatus==="number" && mxStatus<0){ $tr.attr("title","MEXC sell failed"); }
-        $tb.append($tr);
-    });
-    $("#rows-count").text(String(rows.length) + (rows.length===1 ? " row" : " rows"));
-}
-function fetchTrades(){
-    if(!serviceState.dex) { // gate (avoid spamming before ready)
-        $("#trades-tbody").html('<tr><td class="text-muted" colspan="13">DEX service not ready…</td></tr>');
-        $("#rows-count").text("0 rows");
-        return;
+function badgeForStatus(status, statusString) {
+    let cls = 'bg-primary',
+        text = 'Pending'
+    if (typeof status === 'number') {
+        if (status === 3) {
+            cls = 'bg-success'
+            text = 'Filled'
+        } else if (status < 0) {
+            cls = 'bg-danger'
+            text = 'Failed'
+        }
     }
-    $.getJSON("/api/extended-trade-data")
-        .done(function(res){ renderTrades(res?.payload||[]); updateTradesTimestamp(); })
-        .fail(function(jqXHR){
-            const $tb=$("#trades-tbody").empty();
-            $tb.append($("<tr>").append($("<td>").attr("colspan",13).addClass("text-danger").text("Failed to fetch /api/extended-trade-data ("+jqXHR.status+")")));
-            $("#rows-count").text("0 rows"); updateTradesTimestamp();
-        });
+    if (typeof statusString === 'string' && statusString.trim())
+        text = statusString.trim()
+    const $b = $('<span>')
+        .addClass('badge ' + cls)
+        .text(text)
+    if (typeof status === 'number') $b.attr('title', 'status=' + status)
+    return $b
+}
+function renderTrades(payload) {
+    const $tb = $('#trades-tbody').empty()
+    const rows = Array.isArray(payload) ? payload.slice() : []
+    rows.sort(
+        (a, b) =>
+            Number(b.timestampLong || +new Date(b.timestamp)) -
+            Number(a.timestampLong || +new Date(a.timestamp))
+    )
+    if (rows.length === 0) {
+        $tb.append(
+            $('<tr>').append(
+                $('<td>')
+                    .attr('colspan', 13)
+                    .addClass('text-muted')
+                    .text('No trades found')
+            )
+        )
+        $('#rows-count').text('0 rows')
+        return
+    }
+    rows.forEach((tr) => {
+        const tsDex = tr.timestamp || null,
+            fusdSold = tr.tokensTraded,
+            zanoRecv = tr.zanoTraded,
+            zanoUsdtRef = tr.zanoUsdtPrice
+        const mx = tr.zanoSellOrder || null,
+            mxZano = mx ? mx.firstAmount : null,
+            mxPrice = mx ? mx.price : null,
+            mxUsdtT = mx ? mx.secondAmountTarget : null,
+            mxStatus = mx ? mx.status : null,
+            mxStr = mx ? mx.statusString : null,
+            mxTs = mx ? mx.timestamp : null
+        const fb = tr.fusdBuyOrder || null,
+            fbFusd = fb ? fb.firstAmount : null,
+            fbPrice = fb ? fb.price : null,
+            fbUsdt = fb ? fb.secondAmount : null,
+            fbStatus = fb ? fb.status : null,
+            fbStr = fb ? fb.statusString : null,
+            fbTs = fb ? fb.timestamp : null
+
+        const $tr = $('<tr>')
+        $tr.append(
+            $('<td>').text(toIsoLocal(new Date(tsDex))),
+            $('<td>').text(fmtFloat(fusdSold, tr.decimals ?? 8)),
+            $('<td>').text(fmtFloat(zanoRecv, 12)),
+            $("<td class='colsecr'>").text(fmtFloat(zanoUsdtRef, 8)),
+            $('<td>').text(fmtFloat(mxZano, 12)),
+            $('<td>').text(fmtFloat(mxPrice, 6)),
+            $('<td>').text(fmtFloat(mxUsdtT, 6)),
+            $("<td class='colsecr'>")
+                .append(
+                    mx
+                        ? badgeForStatus(mxStatus, mxStr)
+                        : $('<span>').addClass('text-muted').text('—')
+                )
+                .append(
+                    mx ? $('<div>').addClass('text-muted small').text(fmtTime(mxTs)) : ''
+                ),
+            $('<td>').text(fb ? fmtFloat(fbFusd, 8) : '—'),
+            $('<td>').text(fb ? fmtFloat(fbPrice, 8) : '—'),
+            $('<td>').text(fb ? fmtFloat(fbUsdt, 8) : '—'),
+            $('<td>')
+                .append(
+                    fb
+                        ? badgeForStatus(fbStatus, fbStr)
+                        : $('<span>').addClass('text-muted').text('—')
+                )
+                .append(
+                    fb ? $('<div>').addClass('text-muted small').text(fmtTime(fbTs)) : ''
+                )
+        )
+        if (typeof mxStatus === 'number' && mxStatus < 0) {
+            $tr.attr('title', 'MEXC sell failed')
+        }
+        $tb.append($tr)
+    })
+    $('#rows-count').text(
+        String(rows.length) + (rows.length === 1 ? ' row' : ' rows')
+    )
+}
+function fetchTrades() {
+    if (!serviceState.dex) {
+        // gate (avoid spamming before ready)
+        $('#trades-tbody').html(
+            '<tr><td class="text-muted" colspan="13">DEX service not ready…</td></tr>'
+        )
+        $('#rows-count').text('0 rows')
+        return
+    }
+    $.getJSON('/api/extended-trade-data')
+        .done(function (res) {
+            renderTrades(res?.payload || [])
+            updateTradesTimestamp()
+        })
+        .fail(function (jqXHR) {
+            const $tb = $('#trades-tbody').empty()
+            $tb.append(
+                $('<tr>').append(
+                    $('<td>')
+                        .attr('colspan', 13)
+                        .addClass('text-danger')
+                        .text(
+                            'Failed to fetch /api/extended-trade-data (' + jqXHR.status + ')'
+                        )
+                )
+            )
+            $('#rows-count').text('0 rows')
+            updateTradesTimestamp()
+        })
 }
 
 function renderRowsBuy(payload) {
-    const $tb = $("#trades-tbody-buy").empty();
-    const rows = Array.isArray(payload) ? payload.slice() : [];
+    const $tb = $('#trades-tbody-buy').empty()
+    const rows = Array.isArray(payload) ? payload.slice() : []
 
     // Newest first
-    rows.sort((a, b) => (Number(b.timestampLong || +new Date(b.timestamp)) - Number(a.timestampLong || +new Date(a.timestamp))));
+    rows.sort(
+        (a, b) =>
+            Number(b.timestampLong || +new Date(b.timestamp)) -
+            Number(a.timestampLong || +new Date(a.timestamp))
+    )
 
     if (rows.length === 0) {
-        $tb.append($("<tr>").append($("<td>").attr("colspan", 13).addClass("text-muted").text("No trades found")));
-        $("#rows-count-buy").text("0 rows");
-        console.log("No buy trades");
-        return;
+        $tb.append(
+            $('<tr>').append(
+                $('<td>')
+                    .attr('colspan', 13)
+                    .addClass('text-muted')
+                    .text('No trades found')
+            )
+        )
+        $('#rows-count-buy').text('0 rows')
+        console.log('No buy trades')
+        return
     }
 
-    rows.forEach(tr => {
+    rows.forEach((tr) => {
         // DEX step
-        const tsDex = tr.timestamp || null;
-        const fusdSold = tr.tokensTraded;
-        const zanoReceived = tr.zanoTraded;
-        const zanoUsdtRef = tr.zanoUsdtPrice;
+        const tsDex = tr.timestamp || null
+        const fusdSold = tr.tokensTraded
+        const zanoReceived = tr.zanoTraded
+        const zanoUsdtRef = tr.zanoUsdtPrice
 
         // MEXC SELL step
-        const mxFusdSell = tr.fusdSellOrder || null;
-        const mxFusdSellFusdAmount = mxFusdSell ? mxFusdSell.firstAmount : null;
-        const mxFusdSellPrice = mxFusdSell ? mxFusdSell.price : null;
-        const mxFusdSellUsdtAmount = mxFusdSell ? mxFusdSell.secondAmount : null;
-        var mxFusdStatus = mxFusdSell ? mxFusdSell.status : null;
+        const mxFusdSell = tr.fusdSellOrder || null
+        const mxFusdSellFusdAmount = mxFusdSell ? mxFusdSell.firstAmount : null
+        const mxFusdSellPrice = mxFusdSell ? mxFusdSell.price : null
+        const mxFusdSellUsdtAmount = mxFusdSell ? mxFusdSell.secondAmount : null
+        var mxFusdStatus = mxFusdSell ? mxFusdSell.status : null
 
-        const mxFusdStatusStr = mxFusdSell ? mxFusdSell.statusString : null;
-        const mxFusdTs = mxFusdSell ? mxFusdSell.timestamp : null;
+        const mxFusdStatusStr = mxFusdSell ? mxFusdSell.statusString : null
+        const mxFusdTs = mxFusdSell ? mxFusdSell.timestamp : null
 
         // MEXC BUY step
-        const mxZanoBuy = tr.zanoBuyOrder || null;
-        const mxZanoBuyZano = mxZanoBuy ? mxZanoBuy.firstAmount : null;
-        const mxZanoBuyPrice = mxZanoBuy ? mxZanoBuy.price : null;
-        const mxZanoBuyUsdt = mxZanoBuy ? mxZanoBuy.secondAmount : null;
-        const mxZanoBuyUsdtTarget = mxZanoBuy ? mxZanoBuy.secondAmountTarget : null;
-        const mxZanoBuyPercent = (mxZanoBuyUsdtTarget / mxZanoBuyPrice) / mxZanoBuyZano * 100;
-        const mxZanoBuyStatus = mxZanoBuy ? mxZanoBuy.status : null;
-        const mxZanoBuyTs = mxZanoBuy ? mxZanoBuy.timestamp : null;
+        const mxZanoBuy = tr.zanoBuyOrder || null
+        const mxZanoBuyZano = mxZanoBuy ? mxZanoBuy.firstAmount : null
+        const mxZanoBuyPrice = mxZanoBuy ? mxZanoBuy.price : null
+        const mxZanoBuyUsdt = mxZanoBuy ? mxZanoBuy.secondAmount : null
+        const mxZanoBuyUsdtTarget = mxZanoBuy ? mxZanoBuy.secondAmountTarget : null
+        const mxZanoBuyPercent =
+            (mxZanoBuyUsdtTarget / mxZanoBuyPrice / mxZanoBuyZano) * 100
+        const mxZanoBuyStatus = mxZanoBuy ? mxZanoBuy.status : null
+        const mxZanoBuyTs = mxZanoBuy ? mxZanoBuy.timestamp : null
 
-        const $tr = $("<tr>");
+        const $tr = $('<tr>')
 
         // Cols
         $tr.append(
-            $("<td>").text(fmtTime(tsDex)),
+            $('<td>').text(fmtTime(tsDex)),
 
             // DEX: fUSD sold, ZANO received, ref price
-            $("<td>").text(fmtFloat(fusdSold, tr.decimals ?? 8)),
-            $("<td>").text(fmtFloat(zanoReceived, 12)),
+            $('<td>').text(fmtFloat(fusdSold, tr.decimals ?? 8)),
+            $('<td>').text(fmtFloat(zanoReceived, 12)),
             $("<td class='colsecr'>").text(fmtFloat(zanoUsdtRef, 8)),
 
             // MEXC SELL fUSD
-            $("<td>").text(fmtFloat(mxFusdSellFusdAmount, 4)),
-            $("<td>").text(fmtFloat(mxFusdSellPrice, 4)),
-            $("<td>").text(fmtFloat(mxFusdSellUsdtAmount, 4)),
-            $("<td>").append(mxFusdSell ? badgeForStatus(mxFusdStatus, mxFusdStatusStr) : $("<span>").addClass("text-muted").text("—"))
-                .append(mxFusdSell ? $("<div>").addClass("text-muted small").text(fmtTime(mxFusdTs)) : ""),
-
+            $('<td>').text(fmtFloat(mxFusdSellFusdAmount, 4)),
+            $('<td>').text(fmtFloat(mxFusdSellPrice, 4)),
+            $('<td>').text(fmtFloat(mxFusdSellUsdtAmount, 4)),
+            $('<td>')
+                .append(
+                    mxFusdSell
+                        ? badgeForStatus(mxFusdStatus, mxFusdStatusStr)
+                        : $('<span>').addClass('text-muted').text('—')
+                )
+                .append(
+                    mxFusdSell
+                        ? $('<div>').addClass('text-muted small').text(fmtTime(mxFusdTs))
+                        : ''
+                ),
 
             // MEXC BUY ZANO
-            $("<td>").text(fmtFloat(mxZanoBuyZano, 4)),
-            $("<td>").text(fmtFloat(mxZanoBuyPrice, 4)),
-            $("<td>").text(fmtFloat(mxZanoBuyUsdt, 4)),
-            $("<td>").append(mxZanoBuy ? badgeForStatus(mxZanoBuyStatus, "") : $("<span>").addClass("text-muted").text("—"))
-                .append(mxZanoBuy ? $("<div>").addClass("text-muted small").text(fmtTime(mxZanoBuyTs)) : ""),
-
-
-        );
+            $('<td>').text(fmtFloat(mxZanoBuyZano, 4)),
+            $('<td>').text(fmtFloat(mxZanoBuyPrice, 4)),
+            $('<td>').text(fmtFloat(mxZanoBuyUsdt, 4)),
+            $('<td>')
+                .append(
+                    mxZanoBuy
+                        ? badgeForStatus(mxZanoBuyStatus, '')
+                        : $('<span>').addClass('text-muted').text('—')
+                )
+                .append(
+                    mxZanoBuy
+                        ? $('<div>').addClass('text-muted small').text(fmtTime(mxZanoBuyTs))
+                        : ''
+                )
+        )
 
         // Optional visual hint: if MEXC SELL failed, emphasize the row slightly by title
-        if (typeof mxStatus === "number" && mxStatus < 0) {
-            $tr.attr("title", "MEXC sell failed");
+        if (typeof mxStatus === 'number' && mxStatus < 0) {
+            $tr.attr('title', 'MEXC sell failed')
         }
 
-        $tb.append($tr);
-    });
+        $tb.append($tr)
+    })
 
-    $("#rows-count-buy").text(String(rows.length) + (rows.length === 1 ? " row" : " rows"));
+    $('#rows-count-buy').text(
+        String(rows.length) + (rows.length === 1 ? ' row' : ' rows')
+    )
 }
 
 /* ---------------- Data Fetch ---------------- */
 function fetchTradesBuy() {
-    $.getJSON("/api/extended-trade-data-buy")
+    $.getJSON('/api/extended-trade-data-buy')
         .done(function (res) {
-            const payload = (res && res.payload) ? res.payload : [];
-            renderRowsBuy(payload);
-            updateTimestamp();
+            const payload = res && res.payload ? res.payload : []
+            renderRowsBuy(payload)
+            updateTimestamp()
         })
         .fail(function (jqXHR) {
-            const $tb = $("#trades-tbody-buy").empty();
+            const $tb = $('#trades-tbody-buy').empty()
             $tb.append(
-                $("<tr>").append(
-                    $("<td>").attr("colspan", 13)
-                        .addClass("text-danger")
-                        .text("Failed to fetch /api/extended-trade-data (" + jqXHR.status + ")")
+                $('<tr>').append(
+                    $('<td>')
+                        .attr('colspan', 13)
+                        .addClass('text-danger')
+                        .text(
+                            'Failed to fetch /api/extended-trade-data (' + jqXHR.status + ')'
+                        )
                 )
-            );
-            $("#rows-count-buy").text("0 rows");
-            updateTimestamp();
-        });
+            )
+            $('#rows-count-buy').text('0 rows')
+            updateTimestamp()
+        })
 }
 
 /***********************
  * Init + handlers
  ***********************/
-$(function(){
-    daemonModal = new bootstrap.Modal(document.getElementById("daemon-modal"), { backdrop:"static", keyboard:false });
+$(function () {
+    daemonModal = new bootstrap.Modal(document.getElementById('daemon-modal'), {
+        backdrop: 'static',
+        keyboard: false,
+    })
 
     // Initial readiness check; then start readiness poller
-    refreshAppStatus().then(()=>{
+    refreshAppStatus().then(() => {
         // Kick initial fetches (they internally gate by serviceState):
-        fetchZanoStatus(); fetchMmStatus(); fetchMexcStatus(); fetchTrades(); fetchTradesBuy();
-    });
-    startPoller("app", refreshAppStatus, 4000);
+        fetchZanoStatus()
+        fetchMmStatus()
+        fetchMexcStatus()
+        fetchTrades()
+        fetchTradesBuy()
+    })
+    startPoller('app', refreshAppStatus, 4000)
 
     // Save alias
-    $("#alias-save-btn").on("click", function(){
-        const $btn=$(this), $input=$("#alias-input"), $help=$("#alias-help");
-        const aliasVal = ($input.val()||"").toString().trim();
-        if(!aliasVal){ $help.removeClass("text-success").addClass("text-danger").text("Alias cannot be empty."); return; }
-        if(aliasVal.length<3 || aliasVal.length>64){ $help.removeClass("text-success").addClass("text-danger").text("Alias must be 3–64 characters."); return; }
-        $btn.prop("disabled", true); $help.removeClass("text-danger text-success").text("Saving…");
-        $.ajax({ url:"/api/set-alias", method:"POST", contentType:"application/json", data: JSON.stringify({ alias: aliasVal }) })
-            .done(function(){ $help.removeClass("text-danger").addClass("text-success").text("Alias saved."); setWalletAlias(aliasVal); setAliasNoticeVisible(false); updateBotControls(CURRENT_ALIAS, LAST_ASSET_MAP); })
-            .fail(function(jqXHR){
-                console.log(jqXHR);
-                if (jqXHR.responseJSON && jqXHR.responseJSON.message && jqXHR.responseJSON.message.includes("WALLET_RPC_ERROR_CODE_NOT_ENOUGH_MONEY")) {
-                    $help.removeClass("text-success").addClass("text-danger").text("Failed to save alias, not enough money in wallet.");
+    $('#alias-save-btn').on('click', function () {
+        const $btn = $(this),
+            $input = $('#alias-input'),
+            $help = $('#alias-help')
+        const aliasVal = ($input.val() || '').toString().trim()
+        if (!aliasVal) {
+            $help
+                .removeClass('text-success')
+                .addClass('text-danger')
+                .text('Alias cannot be empty.')
+            return
+        }
+        if (aliasVal.length < 3 || aliasVal.length > 64) {
+            $help
+                .removeClass('text-success')
+                .addClass('text-danger')
+                .text('Alias must be 3–64 characters.')
+            return
+        }
+        $btn.prop('disabled', true)
+        $help.removeClass('text-danger text-success').text('Saving…')
+        $.ajax({
+            url: '/api/set-alias',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ alias: aliasVal }),
+        })
+            .done(function () {
+                $help
+                    .removeClass('text-danger')
+                    .addClass('text-success')
+                    .text('Alias saved.')
+                setWalletAlias(aliasVal)
+                setAliasNoticeVisible(false)
+                updateBotControls(CURRENT_ALIAS, LAST_ASSET_MAP)
+            })
+            .fail(function (jqXHR) {
+                console.log(jqXHR)
+                if (
+                    jqXHR.responseJSON &&
+                    jqXHR.responseJSON.message &&
+                    jqXHR.responseJSON.message.includes(
+                        'WALLET_RPC_ERROR_CODE_NOT_ENOUGH_MONEY'
+                    )
+                ) {
+                    $help
+                        .removeClass('text-success')
+                        .addClass('text-danger')
+                        .text('Failed to save alias, not enough money in wallet.')
                 } else {
-                    $help.removeClass("text-success").addClass("text-danger").text("Failed to save alias ("+jqXHR.responseJSON.message+").");
+                    $help
+                        .removeClass('text-success')
+                        .addClass('text-danger')
+                        .text('Failed to save alias (' + jqXHR.responseJSON.message + ').')
                 }
             })
-            .always(function(){ $btn.prop("disabled", false); });
-    });
+            .always(function () {
+                $btn.prop('disabled', false)
+            })
+    })
 
     // Start/Stop bot
-    $("#btn-start-bot").on("click", function(){
-        const $btn=$(this), $help=$("#bot-help");
-        $btn.prop("disabled", true); $("#btn-stop-bot").prop("disabled", true);
-        $help.removeClass("text-danger").addClass("text-muted").text("Starting…");
-        $.ajax({ url:"/api/bot/start", method:"POST", contentType:"application/json", data: JSON.stringify({ cmd: 'start' }) })
-            .done(function(){ $help.removeClass("text-danger").addClass("text-success").text("Bot started."); serviceState.tradingOpen = true; })
-            .fail(function(jqXHR){ $help.removeClass("text-success").addClass("text-danger").text("Failed to start bot ("+jqXHR.status+")."); })
-            .always(function(){ updateBotControls(CURRENT_ALIAS, LAST_ASSET_MAP); $("#btn-stop-bot").prop("disabled", false); fetchMmStatus(); });
-    });
-    $("#btn-stop-bot").on("click", function(){
-        const $btn=$(this), $help=$("#bot-help");
-        $btn.prop("disabled", true); $("#btn-start-bot").prop("disabled", true);
-        $help.removeClass("text-danger").addClass("text-muted").text("Stopping…");
-        $.ajax({ url:"/api/bot/stop", method:"POST", contentType:"application/json", data: JSON.stringify({ cmd: 'stop' })  })
-            .done(function(){ $help.removeClass("text-danger").addClass("text-success").text("Bot stopped."); })
-            .fail(function(jqXHR){ $help.removeClass("text-success").addClass("text-danger").text("Failed to stop bot ("+jqXHR.status+")."); })
-            .always(function(){ updateBotControls(CURRENT_ALIAS, LAST_ASSET_MAP); fetchMmStatus(); });
-    });
+    $('#btn-start-bot').on('click', function () {
+        const $btn = $(this),
+            $help = $('#bot-help')
+        $btn.prop('disabled', true)
+        $('#btn-stop-bot').prop('disabled', true)
+        $help.removeClass('text-danger').addClass('text-muted').text('Starting…')
+        $.ajax({
+            url: '/api/bot/start',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ cmd: 'start' }),
+        })
+            .done(function () {
+                $help
+                    .removeClass('text-danger')
+                    .addClass('text-success')
+                    .text('Bot started.')
+                serviceState.tradingOpen = true
+            })
+            .fail(function (jqXHR) {
+                $help
+                    .removeClass('text-success')
+                    .addClass('text-danger')
+                    .text('Failed to start bot (' + jqXHR.status + ').')
+            })
+            .always(function () {
+                updateBotControls(CURRENT_ALIAS, LAST_ASSET_MAP)
+                $('#btn-stop-bot').prop('disabled', false)
+                fetchMmStatus()
+            })
+    })
+    $('#btn-stop-bot').on('click', function () {
+        const $btn = $(this),
+            $help = $('#bot-help')
+        $btn.prop('disabled', true)
+        $('#btn-start-bot').prop('disabled', true)
+        $help.removeClass('text-danger').addClass('text-muted').text('Stopping…')
+        $.ajax({
+            url: '/api/bot/stop',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ cmd: 'stop' }),
+        })
+            .done(function () {
+                $help
+                    .removeClass('text-danger')
+                    .addClass('text-success')
+                    .text('Bot stopped.')
+            })
+            .fail(function (jqXHR) {
+                $help
+                    .removeClass('text-success')
+                    .addClass('text-danger')
+                    .text('Failed to stop bot (' + jqXHR.status + ').')
+            })
+            .always(function () {
+                updateBotControls(CURRENT_ALIAS, LAST_ASSET_MAP)
+                fetchMmStatus()
+            })
+    })
 
     // Trades refresh button
-    $("#refresh-btn").on("click", fetchTrades);
-});
+    $('#refresh-btn').on('click', fetchTrades)
+})
 
-function iconYesNo(flag){
+function iconYesNo(flag) {
     return flag
         ? '<i class="bi bi-check-circle-fill text-success me-1"></i>Yes'
-        : '<i class="bi bi-x-circle-fill text-danger me-1"></i>No';
+        : '<i class="bi bi-x-circle-fill text-danger me-1"></i>No'
 }
 
-function atomicToNum(atomic, decimals){
-    const n = Number(atomic);
-    const d = Math.max(0, Number(decimals) || 0);
-    if (!isFinite(n)) return 0;
-    return n / Math.pow(10, d);
+function atomicToNum(atomic, decimals) {
+    const n = Number(atomic)
+    const d = Math.max(0, Number(decimals) || 0)
+    if (!isFinite(n)) return 0
+    return n / Math.pow(10, d)
 }
 
-function walletHasMinZano(minRequired = 0.11){
+function walletHasMinZano(minRequired = 0.11) {
     try {
-        const map = LAST_ASSET_MAP || {};
-        for(const k in map){
-            const a = map[k] || {};
-            const info = a.asset_info || {};
-            const ticker = (info.ticker || "").toUpperCase();
-            if (ticker === "ZANO"){
-                const unlocked = atomicToNum(a.unlocked ?? 0, info.decimal_point ?? 0);
-                if (unlocked >= minRequired) return true;
+        const map = LAST_ASSET_MAP || {}
+        for (const k in map) {
+            const a = map[k] || {}
+            const info = a.asset_info || {}
+            const ticker = (info.ticker || '').toUpperCase()
+            if (ticker === 'ZANO') {
+                const unlocked = atomicToNum(a.unlocked ?? 0, info.decimal_point ?? 0)
+                if (unlocked >= minRequired) return true
             }
         }
-    } catch(_) {}
-    return false;
+    } catch (_) {}
+    return false
 }
 
-function updateAppStatusCard(){
+function updateAppStatusCard() {
     // Icons (Yes/No)
-    $("#appstat-wallet").html(iconYesNo(!!serviceState.wallet));
-    $("#appstat-dex").html(iconYesNo(!!serviceState.dex));
-    $("#appstat-cex").html(iconYesNo(!!serviceState.cex));
-    $("#appstat-telegram").html(iconYesNo(!!serviceState.telegram));
-    $("#appstat-version").html(iconYesNo(!!!serviceState.update));
+    $('#appstat-wallet').html(iconYesNo(!!serviceState.wallet))
+    $('#appstat-dex').html(iconYesNo(!!serviceState.dex))
+    $('#appstat-cex').html(iconYesNo(!!serviceState.cex))
+    $('#appstat-telegram').html(iconYesNo(!!serviceState.telegram))
+    $('#appstat-version').html(iconYesNo(!!!serviceState.update))
 
     // Guidance text
-    const hints = [];
+    const hints = []
     // Wallet: needs ≥ 0.11 ZANO to be able to set an alias
     if (!serviceState.wallet) {
-        hints.push("Wallet service is not active yet. If freshly started, give it a moment. To set an alias, deposit at least 0.11 ZANO.");
+        hints.push(
+            'Wallet service is not active yet. If freshly started, give it a moment. To set an alias, deposit at least 0.11 ZANO.'
+        )
     } else {
         if (!serviceState.alias && !serviceState.pendingAlias) {
             if (!walletHasMinZano(0.11)) {
-                hints.push("Deposit at least 0.11 ZANO so you can create a wallet alias.");
+                hints.push(
+                    'Deposit at least 0.11 ZANO so you can create a wallet alias.'
+                )
             }
         }
     }
@@ -642,64 +1095,80 @@ function updateAppStatusCard(){
     // DEX: depends on wallet alias
     if (!serviceState.dex) {
         if (!CURRENT_ALIAS) {
-            hints.push("Set a wallet alias (see the “Wallet Status” card) to enable the DEX trading service.");
+            hints.push(
+                'Set a wallet alias (see the “Wallet Status” card) to enable the DEX trading service.'
+            )
         } else {
-            hints.push("DEX trading service is inactive. It requires a valid wallet alias.");
+            hints.push(
+                'DEX trading service is inactive. It requires a valid wallet alias.'
+            )
         }
     }
 
     // CEX: depends on MEXC API key
     if (!serviceState.cex) {
-        if (mexcKeyState === "missing") {
-            hints.push('No MEXC API key set. Add your API key and secret on the <a href="/settings">Settings</a> page.');
-        } else if (mexcKeyState === "invalid") {
-            hints.push('MEXC API key appears invalid. Fix it on the <a href="/settings">Settings</a> page.');
+        if (mexcKeyState === 'missing') {
+            hints.push(
+                'No MEXC API key set. Add your API key and secret on the <a href="/settings">Settings</a> page.'
+            )
+        } else if (mexcKeyState === 'invalid') {
+            hints.push(
+                'MEXC API key appears invalid. Fix it on the <a href="/settings">Settings</a> page.'
+            )
         } else {
-            hints.push('Ensure your MEXC API key and secret are configured on the <a href="/settings">Settings</a> page.');
+            hints.push(
+                'Ensure your MEXC API key and secret are configured on the <a href="/settings">Settings</a> page.'
+            )
         }
     }
 
     if (!serviceState.telegram) {
-        hints.push("Create a Telegram bot and add the bot token on the settings page to configure a Telegram bot for error notifications.");
+        hints.push(
+            'Create a Telegram bot and add the bot token on the settings page to configure a Telegram bot for error notifications.'
+        )
     }
     if (serviceState.update) {
-        hints.push("There is a new version of this software available.");
+        hints.push('There is a new version of this software available.')
     }
 
     // Enable tooltip on the copy button (Bootstrap 5)
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+    const tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    )
+    tooltipTriggerList.map((el) => new bootstrap.Tooltip(el))
 
-// Copy address to clipboard
-    $(document).on("click", "#btn-copy-address", async function(){
-        const btn = this;
-        const val = $("#wallet-address-input").val();
-        if(!val || val === "Error" || val === "Loading...") return;
+    // Copy address to clipboard
+    $(document).on('click', '#btn-copy-address', async function () {
+        const btn = this
+        const val = $('#wallet-address-input').val()
+        if (!val || val === 'Error' || val === 'Loading...') return
 
         // try async clipboard; fallback to execCommand for older browsers
         try {
-            await navigator.clipboard.writeText(val);
-        } catch(_) {
-            const el = document.getElementById("wallet-address-input");
-            el.removeAttribute("readonly");
-            el.select(); el.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-            el.setAttribute("readonly", "readonly");
-            window.getSelection()?.removeAllRanges();
+            await navigator.clipboard.writeText(val)
+        } catch (_) {
+            const el = document.getElementById('wallet-address-input')
+            el.removeAttribute('readonly')
+            el.select()
+            el.setSelectionRange(0, 99999)
+            document.execCommand('copy')
+            el.setAttribute('readonly', 'readonly')
+            window.getSelection()?.removeAllRanges()
         }
 
         // visual feedback
-        btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
-        setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 1200);
-    });
-
+        btn.innerHTML = '<i class="bi bi-clipboard-check"></i>'
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-clipboard"></i>'
+        }, 1200)
+    })
 
     // Final message
-    $("#appstatus-help").html(
-        hints.length ? ("<ul class='mb-0 ps-3'>" + hints.map(h => `<li>${h}</li>`).join("") + "</ul>") :
-            "<span class='text-success'>All application services are active.</span>"
-    );
-
-
-
+    $('#appstatus-help').html(
+        hints.length
+            ? "<ul class='mb-0 ps-3'>" +
+            hints.map((h) => `<li>${h}</li>`).join('') +
+            '</ul>'
+            : "<span class='text-success'>All application services are active.</span>"
+    )
 }

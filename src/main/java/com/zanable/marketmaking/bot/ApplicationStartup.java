@@ -105,8 +105,10 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
                 try {
                     DatabaseService.applyPatch("db/patches/" + currentAppVersion + ".sql");
                     logger.info("Database patch is complete");
+                } catch (IllegalArgumentException e) {
+                    logger.info("No database patch found.");
                 } catch (Exception e) {
-                    logger.error("Database patch failed", e.getMessage());
+                    logger.error("Database patch failed.", e.getMessage());
                 }
                 SettingsService.saveAppSetting("application_version", currentAppVersion);
             }

@@ -41,7 +41,11 @@ public class WalletTransactions {
             responseBean.setTotalItems(totalItems);
             responseBean.setTotalPages((totalItems/pageSize)+1);
             responseBean.setCurrentPage(page);
-            responseBean.setWalletInfo(ZanoWalletService.getInfo());
+            try {
+                responseBean.setWalletInfo(ZanoWalletService.getInfo());
+            } catch (Exception e) {
+                responseBean.setWalletInfo(null);
+            }
 
             return new ResponseEntity<>(responseBean, HttpStatus.OK);
         } catch (Exception e) {

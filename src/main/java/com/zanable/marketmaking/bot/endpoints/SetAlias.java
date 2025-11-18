@@ -39,10 +39,13 @@ public class SetAlias {
         try {
             // System.out.println("ALIAS DEBUG: " + ZanoWalletService.getAliasDetails(setAliasReq.getAlias()));
             AliasDetails aliasDetails = ZanoWalletService.getAliasDetails(setAliasReq.getAlias());
-            if (aliasDetails != null && aliasDetails.getBaseAddress() != null) {
-                responseBean.setMessage("Alias already registered");
-                responseBean.setStatus(400);
-                return new ResponseEntity<>(responseBean, HttpStatus.BAD_REQUEST);
+            if (aliasDetails != null) {
+                String baseAddress = aliasDetails.getBaseAddress();
+                if (baseAddress != null && !baseAddress.isBlank()) {
+                    responseBean.setMessage("Alias already registered");
+                    responseBean.setStatus(400);
+                    return new ResponseEntity<>(responseBean, HttpStatus.BAD_REQUEST);
+                }
             }
         } catch (NoApiResponseException e) {
             throw new RuntimeException(e);
