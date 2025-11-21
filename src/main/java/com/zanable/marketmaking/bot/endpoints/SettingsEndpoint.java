@@ -173,7 +173,7 @@ public class SettingsEndpoint {
         SettingsService.saveAppSetting("enable_zano_sell", appSettingsBean.isZanoSellEnabled() ? "1" : "0");
         SettingsService.saveAppSetting("enable_fusd_buy", appSettingsBean.isFusdBuyEnabled() ? "1" : "0");
         SettingsService.saveAppSetting("enable_fusd_sell", appSettingsBean.isZanoSellEnabled() ? "1" : "0");
-        SettingsService.saveAppSetting("enable_zano_buy", appSettingsBean.isZanoSellEnabled() ? "1" : "0");
+        SettingsService.saveAppSetting("enable_zano_buy", appSettingsBean.isZanoBuyEnabled() ? "1" : "0");
         SettingsService.saveAppSetting("enable_move_to_cex", appSettingsBean.isZanoMoveFromWalletEnabled() ? "1" : "0");
         SettingsService.saveAppSetting("enable_move_to_wallet", appSettingsBean.isMexcFusdWithdrawEnabled() ? "1" : "0");
         SettingsService.saveAppSetting("enable_autostart_dex_bot", appSettingsBean.isAutoStartDexTradeBot() ? "1" : "0");
