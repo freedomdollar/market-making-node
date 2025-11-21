@@ -187,6 +187,11 @@
       }
       .card.is-disabled .card-overlay {
         display: flex;
+        visibility: visible;
+      }
+      .card.is-disabled .card-body,
+      .card.is-disabled .card-footer {
+        visibility: hidden;
       }
 
       /* Tables */
@@ -322,6 +327,12 @@
         background: rgba(249, 112, 112, 0.16);
         color: var(--color-danger);
       }
+      .tooltip {
+        --bs-tooltip-bg: #ffffff;
+        --bs-tooltip-color: #0a142b;
+        --bs-tooltip-opacity: 1;
+        --bs-tooltip-arrow-color: #ffffff;
+      }
 
       /* Inputs */
       .form-label {
@@ -380,6 +391,21 @@
         background: linear-gradient(120deg, #4f9cff, #2ed3b7);
         border-radius: 999px;
       }
+      .modal-content {
+        background: linear-gradient(
+          145deg,
+          var(--color-surface),
+          var(--color-surface-elevated)
+        );
+        border: 1px solid var(--color-border);
+        border-radius: 20px;
+        box-shadow: var(--shadow-soft);
+        color: var(--color-text);
+      }
+      .modal-header,
+      .modal-footer {
+        border-color: var(--color-border-strong);
+      }
 
       /* Top bar */
       .topbar {
@@ -411,6 +437,41 @@
       }
       .topbar .btn-outline-secondary {
         border-radius: 12px;
+      }
+      .topbar-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .bot-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .bot-btn-wrapper {
+        display: inline-flex;
+      }
+      .bot-controls .btn {
+        min-width: 110px;
+        pointer-events: auto;
+      }
+      .bot-controls .btn:disabled {
+        pointer-events: none;
+      }
+      @media (max-width: 575.98px) {
+        .topbar-actions {
+          gap: 0.75rem;
+        }
+        .bot-controls {
+          width: 100%;
+          justify-content: flex-end;
+        }
+        .bot-controls .btn {
+          flex: 1 1 auto;
+        }
       }
       #pnl-topbar .badge {
         font-size: 0.8rem;
@@ -522,10 +583,52 @@
       }
 
       /* Misc */
+      .wallet-status-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        align-items: flex-start;
+      }
+      .wallet-status-grid .wallet-qr {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .wallet-status-grid .wallet-details {
+        flex: 1 1 420px;
+        min-width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .wallet-status-grid .alias-form-wrapper {
+        max-width: 420px;
+      }
+      @media (max-width: 576px) {
+        .wallet-status-grid {
+          flex-direction: column;
+        }
+        .wallet-status-grid .wallet-details {
+          width: 100%;
+          min-width: 0;
+        }
+      }
       #qrcode {
-        padding: 12px;
+        padding: 10px;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.08);
+        width: 140px;
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #qrcode canvas,
+      #qrcode img {
+        width: 120px !important;
+        height: 120px !important;
       }
       .address-group .input-group-text img {
         display: inline-block;
@@ -579,6 +682,10 @@
         align-items: center;
         gap: 0.5rem;
       }
+      .panel-title.panel-title--compact {
+        font-size: 0.95rem;
+        font-weight: 500;
+      }
       .panel-meta {
         display: inline-flex;
         align-items: center;
@@ -609,6 +716,10 @@
         background: transparent;
         border-top: 1px solid var(--color-border);
         padding: 1rem 1.5rem;
+      }
+      .stack-on-sm {
+        flex-wrap: wrap !important;
+        row-gap: 0.5rem;
       }
       .token-icon {
         width: 18px;
@@ -658,58 +769,99 @@
         />
       </a>
 
-      <div id="pnl-topbar" class="ms-auto me-3 d-flex align-items-center gap-2">
-        <span
-          id="pnl-badge"
-          class="badge rounded-pill bg-secondary"
-          data-bs-toggle="tooltip"
-          data-bs-title="Realized PnL over the current period"
-        >
-          PnL: —
-        </span>
-        <small id="pnl-breakdown" class="text-muted d-none d-md-inline"
-          >—</small
-        >
-      </div>
-
-      <form
-        class="d-none d-md-flex ms-auto me-3"
-        role="search"
-        autocomplete="off"
-        style="display: none"
+      <div
+        class="topbar-actions ms-auto d-flex align-items-center gap-3 flex-wrap"
       >
-        <input
-          class="form-control form-control-sm"
-          type="search"
-          placeholder="Search…"
-          aria-label="Search"
-          style="display: none"
-        />
-      </form>
+        <div id="pnl-topbar" class="d-flex align-items-center gap-2">
+          <span
+            id="pnl-badge"
+            class="badge rounded-pill bg-secondary"
+            data-bs-toggle="tooltip"
+            data-bs-title="Realized PnL over the current period"
+          >
+            PnL: —
+          </span>
+          <small id="pnl-breakdown" class="text-muted d-none d-md-inline"
+            >—</small
+          >
+        </div>
 
-      <div class="dropdown">
-        <button
-          class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
+        <div class="bot-controls">
+          <span
+            id="start-bot-tooltip"
+            class="bot-btn-wrapper"
+            tabindex="0"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title="Alias is not set and no wallet funds detected."
+          >
+            <button
+              type="button"
+              id="btn-start-bot"
+              class="btn btn-sm btn-primary"
+              disabled
+            >
+              Start Bot
+            </button>
+          </span>
+          <span
+            id="stop-bot-tooltip"
+            class="bot-btn-wrapper"
+            tabindex="0"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-title="Alias is not set and no wallet funds detected."
+          >
+            <button
+              type="button"
+              id="btn-stop-bot"
+              class="btn btn-sm btn-outline-danger"
+              disabled
+            >
+              Stop Bot
+            </button>
+          </span>
+        </div>
+
+        <form
+          class="d-none d-md-flex"
+          role="search"
+          autocomplete="off"
+          style="display: none"
         >
-          <i class="bi bi-person-circle"></i
-          ><span class="d-none d-md-inline">Admin</span>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
-          <li><h6 class="dropdown-header">Account</h6></li>
-          <li>
-            <a class="dropdown-item" href="/settings"
-              ><i class="bi bi-gear me-2"></i>Settings</a
-            >
-          </li>
-          <li><hr class="dropdown-divider" /></li>
-          <li>
-            <a class="dropdown-item" href="#"
-              ><i class="bi bi-box-arrow-right me-2"></i>Sign out</a
-            >
-          </li>
-        </ul>
+          <input
+            class="form-control form-control-sm"
+            type="search"
+            placeholder="Search…"
+            aria-label="Search"
+            style="display: none"
+          />
+        </form>
+
+        <div class="dropdown">
+          <button
+            class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <i class="bi bi-person-circle"></i
+            ><span class="d-none d-md-inline">Admin</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+            <li><h6 class="dropdown-header">Account</h6></li>
+            <li>
+              <a class="dropdown-item" href="/settings"
+                ><i class="bi bi-gear me-2"></i>Settings</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item" href="#"
+                ><i class="bi bi-box-arrow-right me-2"></i>Sign out</a
+              >
+            </li>
+          </ul>
+        </div>
       </div>
     </nav>
 
@@ -752,83 +904,84 @@
                   <div class="card-overlay">Wallet service not ready…</div>
                   <div class="card-header">Wallet Status</div>
                   <div class="card-body">
-                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-                      <div class="col-12">
-                        <label class="form-label form-label-sm mb-1"
-                          >Wallet deposit address</label
-                        >
-                        <div
-                          class="input-group input-group-sm address-group"
-                          style="max-width: 640px"
-                        >
-                          <span
-                            class="input-group-text bg-transparent border-secondary"
-                            id="wallet-address-logo"
-                            title="ZANO"
-                          >
-                            <img
-                              src="https://zano.org/assets/icon-e865cc71.svg"
-                              alt="Zano logo"
-                              class="token-icon"
-                            />
-                          </span>
-                          <input
-                            type="text"
-                            id="wallet-address-input"
-                            class="form-control address"
-                            value="Loading..."
-                            readonly
-                            aria-label="Wallet deposit address"
-                          />
-                          <button
-                            class="btn btn-outline-secondary"
-                            type="button"
-                            id="btn-copy-address"
-                            data-bs-toggle="tooltip"
-                            data-bs-title="Copy to clipboard"
-                          >
-                            <i class="bi bi-clipboard"></i>
-                          </button>
-                        </div>
-                        <small
-                          id="address-help"
-                          class="text-muted d-block mt-1"
-                        ></small>
+                    <div class="wallet-status-grid mb-3">
+                      <div class="wallet-qr">
+                        <div id="qrcode"></div>
                       </div>
-                      <div
-                        id="qrcode"
-                        style="padding: 5px; background-color: #fff"
-                      ></div>
-                      <p class="mb-0">
-                        <strong>Alias set:</strong>
-                        <span id="wallet-alias">n/a</span>
-                      </p>
-                      <div
-                        class="ms-auto w-100 w-sm-auto"
-                        style="max-width: 420px"
-                      >
-                        <div class="input-group input-group-sm" id="alias-form">
-                          <input
-                            type="text"
-                            id="alias-input"
-                            class="form-control"
-                            placeholder="Set alias (e.g., your_alias)"
-                            autocapitalize="off"
-                            autocorrect="off"
-                            spellcheck="false"
-                          />
-                          <button
-                            class="btn btn-primary"
-                            id="alias-save-btn"
-                            type="button"
+                      <div class="wallet-details">
+                        <div>
+                          <label class="form-label form-label-sm mb-1"
+                            >Wallet deposit address</label
                           >
-                            Save
-                          </button>
+                          <div
+                            class="input-group input-group-sm address-group"
+                            style="max-width: 640px"
+                          >
+                            <span
+                              class="input-group-text bg-transparent border-secondary"
+                              id="wallet-address-logo"
+                              title="ZANO"
+                            >
+                              <img
+                                src="https://zano.org/assets/icon-e865cc71.svg"
+                                alt="Zano logo"
+                                class="token-icon"
+                              />
+                            </span>
+                            <input
+                              type="text"
+                              id="wallet-address-input"
+                              class="form-control address"
+                              value="Loading..."
+                              readonly
+                              aria-label="Wallet deposit address"
+                            />
+                            <button
+                              class="btn btn-outline-secondary"
+                              type="button"
+                              id="btn-copy-address"
+                              data-bs-toggle="tooltip"
+                              data-bs-title="Copy to clipboard"
+                            >
+                              <i class="bi bi-clipboard"></i>
+                            </button>
+                          </div>
+                          <small
+                            id="address-help"
+                            class="text-muted d-block mt-1"
+                          ></small>
                         </div>
-                        <small
-                          id="alias-help"
-                          class="text-muted d-block mt-1"
-                        ></small>
+                        <div class="alias-form-wrapper">
+                          <div
+                            class="input-group input-group-sm"
+                            id="alias-form"
+                          >
+                            <input
+                              type="text"
+                              id="alias-input"
+                              class="form-control"
+                              placeholder="Set alias (e.g., your_alias)"
+                              autocapitalize="off"
+                              autocorrect="off"
+                              spellcheck="false"
+                            />
+                            <button
+                              class="btn btn-primary"
+                              id="alias-save-btn"
+                              type="button"
+                            >
+                              Save
+                            </button>
+                          </div>
+                          <small
+                            id="alias-help"
+                            class="text-muted d-block mt-1"
+                          ></small>
+                        </div>
+                        <p class="mb-0">
+                          <strong>Alias set:</strong>
+                          <span id="wallet-alias">n/a</span>
+                        </p>
                       </div>
                     </div>
 
@@ -910,7 +1063,7 @@
               <div class="col-12">
                 <div class="card">
                   <div
-                    class="card-header d-flex align-items-center justify-content-between"
+                    class="card-header d-flex align-items-center justify-content-between stack-on-sm"
                   >
                     <span>
                       <span class="token-chip">
@@ -996,7 +1149,7 @@
               <div class="col-12">
                 <div class="card">
                   <div
-                    class="card-header d-flex align-items-center justify-content-between"
+                    class="card-header d-flex align-items-center justify-content-between stack-on-sm"
                   >
                     <span>
                       <span class="token-chip token-chip--alternate">
@@ -1085,22 +1238,22 @@
               <div class="card collapsible-card" id="sync-card">
                 <div class="card-header">
                   <button
-                    class="panel-toggle collapsed"
+                    class="panel-toggle"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#panel-sync"
-                    aria-expanded="false"
+                    aria-expanded="true"
                     aria-controls="panel-sync"
                   >
                     <span
-                      class="panel-title d-inline-flex align-items-center gap-2"
+                      class="panel-title panel-title--compact d-inline-flex align-items-center gap-2"
                     >
                       <img
                         src="https://zano.org/assets/icon-e865cc71.svg"
                         alt="Zano logo"
                         class="token-icon"
                       />
-                      Zano Network Sync
+                      Zano Network
                     </span>
                     <span class="panel-meta">
                       <span id="network-state" class="badge bg-secondary"
@@ -1111,10 +1264,10 @@
                   </button>
                 </div>
                 <div class="card-overlay">Zano daemon is initializing…</div>
-                <div id="panel-sync" class="collapse panel-content">
+                <div id="panel-sync" class="collapse show panel-content">
                   <div class="card-body">
                     <div
-                      class="d-flex justify-content-between align-items-center mb-3"
+                      class="d-flex justify-content-between align-items-center mb-3 stack-on-sm"
                     >
                       <div class="d-flex align-items-center gap-2">
                         <span
@@ -1161,11 +1314,11 @@
               <div class="card collapsible-card" id="appstatus-card">
                 <div class="card-header">
                   <button
-                    class="panel-toggle collapsed"
+                    class="panel-toggle"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#panel-appstatus"
-                    aria-expanded="false"
+                    aria-expanded="true"
                     aria-controls="panel-appstatus"
                   >
                     <span class="panel-title">Application Status</span>
@@ -1174,7 +1327,7 @@
                     </span>
                   </button>
                 </div>
-                <div id="panel-appstatus" class="collapse panel-content">
+                <div id="panel-appstatus" class="collapse show panel-content">
                   <div class="card-body">
                     <ul class="list-unstyled mb-3">
                       <li
@@ -1234,11 +1387,11 @@
               <div class="card collapsible-card" id="mexc-card">
                 <div class="card-header">
                   <button
-                    class="panel-toggle collapsed"
+                    class="panel-toggle"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#panel-mexc"
-                    aria-expanded="false"
+                    aria-expanded="true"
                     aria-controls="panel-mexc"
                   >
                     <span class="panel-title">MEXC status</span>
@@ -1251,7 +1404,7 @@
                   </button>
                 </div>
                 <div class="card-overlay">CEX trading service not ready…</div>
-                <div id="panel-mexc" class="collapse panel-content">
+                <div id="panel-mexc" class="collapse show panel-content">
                   <div class="card-body">
                     <div
                       id="mexc-alert"
@@ -1298,11 +1451,11 @@
               <div class="card collapsible-card" id="metrics-card">
                 <div class="card-header">
                   <button
-                    class="panel-toggle collapsed"
+                    class="panel-toggle"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#panel-metrics"
-                    aria-expanded="false"
+                    aria-expanded="true"
                     aria-controls="panel-metrics"
                   >
                     <span class="panel-title">Key Metrics</span>
@@ -1312,7 +1465,7 @@
                   </button>
                 </div>
                 <div class="card-overlay">DEX trading service not ready…</div>
-                <div id="panel-metrics" class="collapse panel-content">
+                <div id="panel-metrics" class="collapse show panel-content">
                   <div class="card-body p-0">
                     <div class="table-responsive">
                       <table class="table align-middle mb-0">
@@ -1336,62 +1489,6 @@
                   </div>
                 </div>
               </div>
-
-              <div class="card collapsible-card" id="bot-card">
-                <div class="card-header">
-                  <button
-                    class="panel-toggle collapsed"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#panel-bot"
-                    aria-expanded="false"
-                    aria-controls="panel-bot"
-                  >
-                    <span class="panel-title">Bot Controls</span>
-                    <span class="panel-meta">
-                      <i class="bi bi-chevron-up panel-toggle-icon"></i>
-                    </span>
-                  </button>
-                </div>
-                <div id="panel-bot" class="collapse panel-content">
-                  <div class="card-body">
-                    <div
-                      id="bot-alert"
-                      class="alert d-none"
-                      role="alert"
-                      style="
-                        background-color: var(--alert-bg);
-                        color: var(--font-main-color);
-                        border: 1px solid var(--window-border-color);
-                      "
-                    >
-                      You need to have an alias and funds in the wallet to start
-                      it.
-                    </div>
-                    <div class="d-flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        id="btn-start-bot"
-                        class="btn btn-primary"
-                        disabled
-                      >
-                        <i class="bi bi-play-fill"></i> Start bot
-                      </button>
-                      <button
-                        type="button"
-                        id="btn-stop-bot"
-                        class="btn btn-outline-danger"
-                      >
-                        <i class="bi bi-stop-fill"></i> Stop bot
-                      </button>
-                    </div>
-                    <small
-                      id="bot-help"
-                      class="text-muted d-block mt-2"
-                    ></small>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1408,7 +1505,7 @@
       aria-hidden="true"
     >
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="color: #000">
+        <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Please wait</h5>
           </div>
